@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+{% block title %}Cấu hình thông báo Telegram - Loop Studio{% endblock %}
+
+{% block content %}
+<div class="px-4 sm:px-6 lg:px-8 max-w-3xl mx-auto">
+    <div class="sm:flex sm:items-center sm:justify-between mb-8">
+        <div>
+            <h1 class="text-2xl font-bold leading-7 text-white sm:truncate sm:text-3xl sm:tracking-tight">
+                Cấu hình thông báo Telegram
+            </h1>
+            <p class="mt-2 text-sm text-slate-400">
+                Thiết lập channel/chat nhận thông báo trước buổi học và trước khi tới deadline công việc.
+            </p>
+        </div>
+    </div>
+
+    <form method="post" class="space-y-6">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+
+        {% for c in configs %}
+        <div class="bg-slate-900 shadow-xl ring-1 ring-white/10 sm:rounded-2xl p-6 relative overflow-hidden">
+            <h3 class="text-lg font-semibold leading-7 text-brand-400 flex items-center gap-x-2">
+                <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                    {% if c.config_type == 'schedule_reminder' %}
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    {% else %}
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    {% endif %}
+                </svg>
+                {{ 'Nhắc buổi học' if c.config_type == 'schedule_reminder' else 'Nhắc việc (Task)' }}
+            </h3>
+            
+            <div class="mt-6 grid grid-cols-1 gap-x-6 gap-y-6 sm:grid-cols-6 border-t border-white/5 pt-6">
+                <!-- Chat ID -->
+                <div class="col-span-1 sm:col-span-3">
+                    <label class="block text-sm font-medium leading-6 text-slate-300">Telegram Chat ID</label>
+                    <div class="mt-2">
+                        <input type="text" name="chat_{{ c.id }}" value="{{ c.chat_id }}" placeholder="-1001234567890" 
+                               class="block w-full rounded-md border-0 bg-slate-800 text-white py-2 px-3 shadow-sm ring-1 ring-inset ring-white/10 focus:ring-2 focus:ring-inset focus:ring-brand-500 sm:text-sm sm:leading-6">
+                    </div>
+                </div>
+
+                <!-- Minutes before -->
+                <div class="col-span-1 sm:col-span-3">
+                    <label class="block text-sm font-medium leading-6 text-slate-300">Phút trước khi gửi</label>
+                    <div class="mt-2">
+                        <input type="number" name="min_{{ c.id }}" value="{{ c.minutes_before }}" min="1"
+                               class="block w-full rounded-md border-0 bg-slate-800 text-white py-2 px-3 shadow-sm ring-1 ring-inset ring-white/10 focus:ring-2 focus:ring-inset focus:ring-brand-500 sm:text-sm sm:leading-6">
+                    </div>
+                </div>
+
+                <!-- Enabled toggle -->
+                <div class="col-span-full">
+                    <div class="relative flex items-start mt-2">
+                        <div class="flex h-6 items-center">
+                            <input type="checkbox" name="enabled_{{ c.id }}" id="enabled_{{ c.id }}" {{ 'checked' if c.enabled else '' }}
+                                   class="h-4 w-4 rounded border-white/10 bg-slate-800 text-brand-500 focus:ring-brand-500">
+                        </div>
+                        <div class="ml-3 text-sm leading-6">
+                            <label for="enabled_{{ c.id }}" class="font-medium text-slate-300">Bật thông báo này</label>
+                            <p class="text-slate-500">Hệ thống sẽ chỉ gửi thông báo nếu tùy chọn này được bật.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+
+        <div class="mt-6 flex items-center justify-end gap-x-4 border-t border-white/5 pt-6">
+            <a href="{{ url_for('schedule.index') }}" class="text-sm font-semibold leading-6 text-slate-300 hover:text-white transition-colors">
+                Trở lại
+            </a>
+            <button type="submit" class="rounded-md bg-brand-500 px-6 py-2 text-sm font-semibold text-white shadow-sm hover:bg-brand-400 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-500 transition-colors">
+                Lưu cấu hình
+            </button>
+        </div>
+    </form>
+</div>
+{% endblock %}

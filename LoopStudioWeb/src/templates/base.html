@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="vi"
+    x-data="{ darkMode: localStorage.getItem('theme') === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches) }"
+    x-init="$watch('darkMode', val => localStorage.setItem('theme', val ? 'dark' : 'light'))"
+    :class="{ 'dark': darkMode }">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Loop Studio{% endblock %} - Loop Studio</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/htmx.org@1.9.10"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.13.3/dist/cdn.min.js"></script>
+    
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            50: '#ecfdf5',
+                            100: '#d1fae5',
+                            500: '#10b981',
+                            600: '#059669',
+                            900: '#064e3b',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@400..700&display=swap" rel="stylesheet">
+
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .font-caveat { font-family: 'Caveat', cursive; }
+        [x-cloak] { display: none !important; }
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: rgba(156, 163, 175, 0.5); border-radius: 4px; }
+        .dark ::-webkit-scrollbar-thumb { background: rgba(75, 85, 99, 0.5); }
+        ::-webkit-scrollbar-thumb:hover { background: rgba(107, 114, 128, 0.8); }
+        .dark ::-webkit-scrollbar-thumb:hover { background: rgba(107, 114, 128, 0.8); }
+    </style>
+    {% block head %}{% endblock %}
+</head>
+
+<body class="bg-gradient-to-br from-indigo-50 via-white to-cyan-50 dark:from-gray-900 dark:via-gray-800 dark:to-slate-900 text-gray-900 dark:text-gray-100 transition-colors duration-200 antialiased selection:bg-brand-500 selection:text-white min-h-screen">
+    <div class="flex h-screen overflow-hidden bg-white/20 dark:bg-black/20 backdrop-blur-sm" x-data="{ sidebarOpen: false }">
+
+        {% if current_user.is_authenticated %}
+        
+        <!-- Mobile Sidebar Menu Backdrop -->
+        <div x-show="sidebarOpen" class="fixed inset-0 z-50 lg:hidden" x-cloak role="dialog" aria-modal="true">
+            <div x-show="sidebarOpen" x-transition.opacity class="fixed inset-0 bg-gray-900/80 backdrop-blur-sm" @click="sidebarOpen = false"></div>
+
+            <div class="fixed inset-0 flex">
+                <div x-show="sidebarOpen" 
+                     x-transition:enter="transition ease-in-out duration-300 transform" 
+                     x-transition:enter-start="-translate-x-full" 
+                     x-transition:enter-end="translate-x-0" 
+                     x-transition:leave="transition ease-in-out duration-300 transform" 
+                     x-transition:leave-start="translate-x-0" 
+                     x-transition:leave-end="-translate-x-full" 
+                     class="relative mr-16 flex w-full max-w-xs flex-1">
+                    
+                    <div class="absolute left-full top-0 flex w-16 justify-center pt-5">
+                        <button type="button" @click="sidebarOpen = false" class="-m-2.5 p-2.5">
+                            <span class="sr-only">Đóng sidebar</span>
+                            <svg class="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                        </button>
+                    </div>
+
+                    <!-- Mobile Sidebar component -->
+                    <aside class="flex grow flex-col gap-y-5 overflow-y-auto bg-white/90 dark:bg-gray-800/90 backdrop-blur-md pb-4 pt-4 px-3 ring-1 ring-black/10 dark:ring-white/10 shadow-[4px_0_24px_rgba(0,0,0,0.1)] dark:shadow-[4px_0_24px_rgba(0,0,0,0.3)]">
+                        <div class="h-16 flex items-center px-3 border-b border-gray-200 dark:border-gray-700/50">
+                            <span class="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-brand-600 to-cyan-600 dark:from-brand-400 dark:to-cyan-400 tracking-tight">Loop Studio</span>
+                        </div>
+                        <nav class="flex-1 space-y-2 mt-4">
+                            <a href="{{ url_for('main.dashboard') }}"
+                                class="flex items-center px-3 py-2.5 text-sm font-medium rounded-xl hover:bg-gray-100/50 dark:hover:bg-gray-700/50 hover:shadow-sm transition-all duration-200 {% if request.endpoint == 'main.dashboard' %}bg-gray-100/60 text-brand-700 dark:bg-gray-700/60 dark:text-brand-300 shadow-sm border border-gray-200/40 dark:border-gray-600/50{% endif %}">
+                                <svg class="mr-3 h-5 w-5 opacity-75" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path>
+                                </svg>
+                                Tổng quan
+                            </a>
+                            <a href="{{ url_for('schedule.index') }}"
+                                class="flex items-center px-3 py-2.5 text-sm font-medium rounded-xl hover:bg-gray-100/50 dark:hover:bg-gray-700/50 hover:shadow-sm transition-all duration-200 {% if 'schedule' in request.endpoint %}bg-gray-100/60 text-brand-700 dark:bg-gray-700/60 dark:text-brand-300 shadow-sm border border-gray-200/40 dark:border-gray-600/50{% endif %}">
+                                <svg class="mr-3 h-5 w-5 opacity-75" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                                </svg>
+                                Thời khóa biểu
+                            </a>
+                            {% if current_user.is_admin %}
+                            <a href="{{ url_for('bot_admin.index') }}"
+                                class="flex items-center px-3 py-2.5 text-sm font-medium rounded-xl hover:bg-gray-100/50 dark:hover:bg-gray-700/50 hover:shadow-sm transition-all duration-200 {% if 'bot_admin' in request.endpoint %}bg-gray-100/60 text-brand-700 dark:bg-gray-700/60 dark:text-brand-300 shadow-sm border border-gray-200/40 dark:border-gray-600/50{% endif %}">
+                                <svg class="mr-3 h-5 w-5 opacity-75" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.25 3v1.5M4.5 8.25H3m18 0h-1.5M4.5 12H3m18 0h-1.5m-15 3.75H3m18 0h-1.5M8.25 19.5V21M12 3v1.5m0 15V21m3.75-18v1.5m0 15V21m-9-1.5h10.5a2.25 2.25 0 002.25-2.25V6.75a2.25 2.25 0 00-2.25-2.25H6.75A2.25 2.25 0 004.5 6.75v10.5a2.25 2.25 0 002.25 2.25zm.75-12h9v9h-9v-9z"></path>
+                                </svg>
+                                Bot Admin
+                            </a>
+                            {% endif %}
+                        </nav>
+                        <div class="p-4 border-t border-gray-200 dark:border-gray-700 space-y-2 mt-auto">
+                            <button @click="darkMode = !darkMode"
+                                class="w-full flex items-center px-3 py-2 text-sm font-medium rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-150">
+                                <svg x-show="!darkMode" class="mr-3 h-5 w-5 opacity-75" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path>
+                                </svg>
+                                <svg x-show="darkMode" style="display: none;" class="mr-3 h-5 w-5 opacity-75" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path>
+                                </svg>
+                                <span x-text="darkMode ? 'Sáng' : 'Tối'"></span>
+                            </button>
+                            <div class="flex items-center justify-between px-3 py-2 mt-4">
+                                <span class="text-sm font-bold bg-clip-text text-transparent bg-gradient-to-r from-gray-700 to-gray-900 dark:from-gray-300 dark:to-white">{{ current_user.username[:12] }}</span>
+                                <a href="{{ url_for('auth.logout') }}" class="text-sm text-red-500 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 transition-colors font-medium">Đăng xuất</a>
+                            </div>
+                        </div>
+                    </aside>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sidebar Navigation (Desktop) -->
+        <aside class="hidden lg:flex flex-col w-64 flex-shrink-0 bg-white/40 dark:bg-gray-800/40 backdrop-blur-md border-r border-white/20 dark:border-gray-700/50 transition-colors duration-200 shadow-[4px_0_24px_rgba(0,0,0,0.05)] dark:shadow-[4px_0_24px_rgba(0,0,0,0.2)]">
+            <div class="h-16 flex items-center px-6 border-b border-white/20 dark:border-gray-700/50">
+                <span class="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-brand-600 to-cyan-600 dark:from-brand-400 dark:to-cyan-400 tracking-tight">Loop Studio</span>
+            </div>
+            <nav class="flex-1 overflow-y-auto py-4 px-3 space-y-2">
+                <a href="{{ url_for('main.dashboard') }}"
+                    class="flex items-center px-3 py-2.5 text-sm font-medium rounded-xl hover:bg-white/50 dark:hover:bg-gray-700/50 hover:shadow-sm transition-all duration-200 {% if request.endpoint == 'main.dashboard' %}bg-white/60 text-brand-700 dark:bg-gray-700/60 dark:text-brand-300 shadow-sm border border-white/40 dark:border-gray-600/50{% endif %}">
+                    <svg class="mr-3 h-5 w-5 opacity-75" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path>
+                    </svg>
+                    Tổng quan
+                </a>
+                <a href="{{ url_for('schedule.index') }}"
+                    class="flex items-center px-3 py-2.5 text-sm font-medium rounded-xl hover:bg-white/50 dark:hover:bg-gray-700/50 hover:shadow-sm transition-all duration-200 {% if 'schedule' in request.endpoint %}bg-white/60 text-brand-700 dark:bg-gray-700/60 dark:text-brand-300 shadow-sm border border-white/40 dark:border-gray-600/50{% endif %}">
+                    <svg class="mr-3 h-5 w-5 opacity-75" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                    </svg>
+                    Thời khóa biểu
+                </a>
+                {% if current_user.is_admin %}
+                <a href="{{ url_for('bot_admin.index') }}"
+                    class="flex items-center px-3 py-2.5 text-sm font-medium rounded-xl hover:bg-white/50 dark:hover:bg-gray-700/50 hover:shadow-sm transition-all duration-200 {% if 'bot_admin' in request.endpoint %}bg-white/60 text-brand-700 dark:bg-gray-700/60 dark:text-brand-300 shadow-sm border border-white/40 dark:border-gray-600/50{% endif %}">
+                    <svg class="mr-3 h-5 w-5 opacity-75" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.25 3v1.5M4.5 8.25H3m18 0h-1.5M4.5 12H3m18 0h-1.5m-15 3.75H3m18 0h-1.5M8.25 19.5V21M12 3v1.5m0 15V21m3.75-18v1.5m0 15V21m-9-1.5h10.5a2.25 2.25 0 002.25-2.25V6.75a2.25 2.25 0 00-2.25-2.25H6.75A2.25 2.25 0 004.5 6.75v10.5a2.25 2.25 0 002.25 2.25zm.75-12h9v9h-9v-9z"></path>
+                    </svg>
+                    Bot Admin
+                </a>
+                {% endif %}
+            </nav>
+            <div class="p-4 border-t border-gray-200/50 dark:border-gray-700/50 space-y-2">
+                <button @click="darkMode = !darkMode"
+                    class="w-full flex items-center px-3 py-2 text-sm font-medium rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-150">
+                    <svg x-show="!darkMode" class="mr-3 h-5 w-5 opacity-75" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path>
+                    </svg>
+                    <svg x-show="darkMode" style="display: none;" class="mr-3 h-5 w-5 opacity-75" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path>
+                    </svg>
+                    <span x-text="darkMode ? 'Sáng' : 'Tối'"></span>
+                </button>
+                <div class="flex items-center justify-between px-3 py-2 mt-4">
+                    <span class="text-sm font-bold bg-clip-text text-transparent bg-gradient-to-r from-gray-700 to-gray-900 dark:from-gray-300 dark:to-white">{{ current_user.username[:12] }}</span>
+                    <a href="{{ url_for('auth.logout') }}" class="text-sm text-red-500 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 transition-colors font-medium">Đăng xuất</a>
+                </div>
+            </div>
+        </aside>
+        
+        {% endif %}
+
+        <!-- Main Content -->
+        <main class="flex-1 overflow-y-auto w-full relative min-h-screen">
+            <!-- Top bar -->
+            <div class="absolute top-4 right-4 z-40 flex items-center gap-4">
+                {% if current_user.is_authenticated %}
+                <button type="button" class="-m-2.5 p-2.5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 lg:hidden focus:outline-none" @click="sidebarOpen = true">
+                    <span class="sr-only">Mở sidebar</span>
+                    <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
+                    </svg>
+                </button>
+                {% else %}
+                <button @click="darkMode = !darkMode"
+                    class="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors duration-150">
+                    <svg x-show="!darkMode" class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path>
+                    </svg>
+                    <svg x-show="darkMode" style="display: none;" class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path>
+                    </svg>
+                </button>
+                {% endif %}
+            </div>
+
+            <div class="container mx-auto px-4 sm:px-6 lg:px-8 py-8 h-full max-w-7xl pt-16 lg:pt-8">
+                
+                <!-- Flash messages -->
+                {% with messages = get_flashed_messages(with_categories=true) %}
+                    {% if messages %}
+                        <div class="mb-8 space-y-3 z-30 relative mx-auto">
+                        {% for category, message in messages %}
+                            <div class="rounded-2xl p-4 flex items-start shadow-[0_4px_24px_rgba(0,0,0,0.04)] backdrop-blur-xl
+                                        {% if category == 'success' %} bg-brand-50/80 border border-brand-200/50 text-brand-700 dark:bg-brand-900/30 dark:border-brand-800/50 dark:text-brand-300
+                                        {% elif category == 'error' %} bg-rose-50/80 border border-rose-200/50 text-rose-700 dark:bg-rose-900/30 dark:border-rose-800/50 dark:text-rose-300
+                                        {% else %} bg-blue-50/80 border border-blue-200/50 text-blue-700 dark:bg-blue-900/30 dark:border-blue-800/50 dark:text-blue-300
+                                        {% endif %}">
+                                <div class="ml-3">
+                                    <p class="text-sm font-bold">{{ message }}</p>
+                                </div>
+                            </div>
+                        {% endfor %}
+                        </div>
+                    {% endif %}
+                {% endwith %}
+
+                {% block content %}{% endblock %}
+            </div>
+            
+            <footer class="mt-auto py-6 text-center text-xs font-medium text-gray-500/80 dark:text-gray-400/80 border-t border-gray-200/20 dark:border-gray-700/20 w-full relative z-10 hidden lg:block">
+                &copy; {{ range(2026, 2027)|first }} Loop Studio. All rights reserved.
+            </footer>
+        </main>
+    </div>
+</body>
+</html>

@@ -1,0 +1,15 @@
+version: "3.8"
+
+# Deploy qua Portainer + GitHub: thêm BOT_TOKEN, REPORT_CHAT_ID trong Stack > Environment variables
+services:
+  loopstudiobot:
+    build: .
+    image: loopstudiobot:latest
+    container_name: loopstudiobot
+    restart: unless-stopped
+    environment:
+      - TZ=Asia/Ho_Chi_Minh
+      - BOT_TOKEN=${BOT_TOKEN}
+      - REPORT_CHAT_ID=${REPORT_CHAT_ID}
+      - NETSTAT_INTERVAL_SECONDS=${NETSTAT_INTERVAL_SECONDS:-7200}
+      - TIMEZONE=${TIMEZONE:-Asia/Ho_Chi_Minh}

@@ -1,0 +1,49 @@
+version: "3.8"
+
+# Deploy cả Bot + Web App bằng 1 file duy nhất
+# Thêm BOT_TOKEN, REPORT_CHAT_ID, SECRET_KEY trong Stack > Environment variables
+
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: loopstudio_db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: loopstudio
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-loopstudio}
+      POSTGRES_DB: loopstudio
+    volumes:
+      - loopstudio_data:/var/lib/postgresql/data
+
+  loopstudiobot:
+    build: ./LoopStudioBot
+    image: loopstudiobot:latest
+    container_name: loopstudiobot
+    restart: unless-stopped
+    depends_on:
+      - loopstudioweb
+    environment:
+      - TZ=Asia/Ho_Chi_Minh
+      - BOT_TOKEN=${BOT_TOKEN}
+      - REPORT_CHAT_ID=${REPORT_CHAT_ID}
+      - NETSTAT_INTERVAL_SECONDS=${NETSTAT_INTERVAL_SECONDS:-7200}
+      - TIMEZONE=${TIMEZONE:-Asia/Ho_Chi_Minh}
+      - WEB_APP_URL=http://loopstudioweb:5000
+
+  loopstudioweb:
+    build: ./LoopStudioWeb
+    image: loopstudioweb:latest
+    container_name: loopstudioweb
+    restart: unless-stopped
+    depends_on:
+      - db
+    ports:
+      - "5000:5000"
+    environment:
+      - TZ=Asia/Ho_Chi_Minh
+      - SECRET_KEY=${SECRET_KEY:-change-me-in-production}
+      - DATABASE_URL=postgresql://loopstudio:${POSTGRES_PASSWORD:-loopstudio}@db:5432/loopstudio
+      - BOT_TOKEN=${BOT_TOKEN}
+
+volumes:
+  loopstudio_data:
