@@ -1,0 +1,97 @@
+{% extends "base.html" %}
+{% block title %}Hồ sơ Cá nhân - Loop Studio{% endblock %}
+
+{% block content %}
+<div class="max-w-3xl mx-auto space-y-6 lg:space-y-8 animate-[fadeIn_0.5s_ease-out]">
+    
+    <!-- Header -->
+    <div class="flex flex-col md:flex-row md:items-end justify-between gap-4">
+        <div class="space-y-1 md:space-y-2">
+            <h1 class="text-3xl font-extrabold tracking-tight">
+                <span class="bg-clip-text text-transparent bg-gradient-to-r from-brand-600 to-cyan-600 dark:from-brand-400 dark:to-cyan-400">
+                    Hồ sơ của bạn
+                </span>
+            </h1>
+            <p class="text-sm md:text-base text-gray-500 dark:text-gray-400 font-medium">
+                Quản lý thông tin cá nhân và cài đặt bảo mật.
+            </p>
+        </div>
+    </div>
+
+    <div class="bg-white/80 dark:bg-gray-800/80 backdrop-blur-xl shadow-[0_4px_24px_rgba(0,0,0,0.04)] dark:shadow-[0_4px_24px_rgba(0,0,0,0.2)] border border-gray-200/50 dark:border-gray-700/50 sm:rounded-2xl overflow-hidden relative p-8">
+        
+        <form action="{{ url_for('main.profile') }}" method="POST" class="space-y-8">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+            
+            <!-- Thông tin Cá Nhân -->
+            <div class="space-y-6">
+                <h3 class="text-lg font-bold text-gray-900 dark:text-white border-b border-gray-200 dark:border-gray-700 pb-2">Thông tin Cơ bản</h3>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Tên đăng nhập</label>
+                        <input type="text" value="{{ current_user.username }}" disabled
+                            class="w-full px-4 py-3 rounded-xl bg-gray-100 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 text-gray-500 dark:text-gray-400 cursor-not-allowed">
+                        <p class="mt-1 text-xs text-gray-500">Tên đăng nhập không thể thay đổi.</p>
+                    </div>
+
+                    <div>
+                        <label for="full_name" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Tên hiển thị (Tùy chọn)</label>
+                        <input type="text" id="full_name" name="full_name" value="{{ current_user.full_name or '' }}" placeholder="Nhập tên thật của bạn"
+                            class="w-full px-4 py-3 rounded-xl bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition-colors">
+                        <p class="mt-1 text-xs text-gray-500">Sẽ được dùng để hiển thị trên phần mềm.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Đổi mật khẩu -->
+            <div class="space-y-6 pt-6">
+                <h3 class="text-lg font-bold text-gray-900 dark:text-white border-b border-gray-200 dark:border-gray-700 pb-2">Đổi Mật khẩu</h3>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <label for="new_password" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Mật khẩu mới</label>
+                        <input type="password" id="new_password" name="new_password" placeholder="Bỏ trống nếu không đổi" minlength="4"
+                            class="w-full px-4 py-3 rounded-xl bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition-colors">
+                    </div>
+
+                    <div>
+                        <label for="confirm_password" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Xác nhận mật khẩu mới</label>
+                        <input type="password" id="confirm_password" name="confirm_password" placeholder="Nhập lại mật khẩu mới" minlength="4"
+                            class="w-full px-4 py-3 rounded-xl bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition-colors">
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Telegram ID Info -->
+            <div class="mt-6 pt-6 border-t border-gray-200 dark:border-gray-700">
+                <div class="flex items-center gap-3">
+                    <svg class="w-6 h-6 text-blue-500 shrink-0" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z"/>
+                    </svg>
+                    <div>
+                        <h4 class="text-sm font-bold text-gray-900 dark:text-white">Liên kết Telegram</h4>
+                        <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+                            Trạng thái: 
+                            {% if current_user.telegram_id %}
+                                <span class="font-medium text-emerald-600 dark:text-emerald-400">Đã đồng bộ</span>
+                            {% else %}
+                                <span class="text-amber-600 dark:text-amber-400">Chưa liên kết</span>
+                            {% endif %}
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Nút Lưu -->
+            <div class="flex justify-end pt-4 border-t border-gray-200 dark:border-gray-700 mt-8">
+                <button type="submit" 
+                    class="px-6 py-3 bg-gradient-to-r from-brand-600 to-cyan-600 hover:from-brand-500 hover:to-cyan-500 text-white font-bold rounded-xl shadow-lg shadow-brand-500/30 transition-all duration-200 hover:-translate-y-0.5 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-500">
+                    Lưu thay đổi
+                </button>
+            </div>
+        </form>
+        
+    </div>
+</div>
+{% endblock %}

@@ -49,3 +49,32 @@ def dashboard():
         upcoming_sessions=upcoming_sessions,
         tasks_due_today=tasks_due_today
     )
+
+@main_bp.route("/profile", methods=["GET", "POST"])
+@login_required
+def profile():
+    """Trang quản lý hồ sơ cá nhân."""
+    from flask import request, flash, redirect, url_for
+    from ..app import db
+    
+    if request.method == "POST":
+        full_name = request.form.get("full_name")
+        new_password = request.form.get("new_password")
+        confirm_password = request.form.get("confirm_password")
+        
+        # Cập nhật tên
+        if full_name is not None:
+            current_user.full_name = full_name.strip()
+            
+        # Cập nhật mật khẩu nếu có nhập
+        if new_password:
+            if new_password != confirm_password:
+                flash("Mật khẩu xác nhận không khớp.", "error")
+                return redirect(url_for("main.profile"))
+            current_user.set_password(new_password)
+            
+        db.session.commit()
+        flash("Đã cập nhật hồ sơ thành công.", "success")
+        return redirect(url_for("main.profile"))
+        
+    return render_template("main/profile.html")
