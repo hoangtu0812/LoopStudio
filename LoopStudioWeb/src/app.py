@@ -38,6 +38,7 @@ def create_app() -> Flask:
 
     app.register_blueprint(main_bp)
     app.register_blueprint(api_bp)
+    csrf.exempt(api_bp)
     app.register_blueprint(auth_bp, url_prefix="/auth")
     app.register_blueprint(bot_admin_bp, url_prefix="/bot")
     app.register_blueprint(schedule_bp, url_prefix="/schedule")

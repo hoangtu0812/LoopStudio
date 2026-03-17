@@ -17,6 +17,7 @@ COMMANDS_HELP = """
 /start - Chào mừng và giới thiệu bot
 /help - Xem danh sách lệnh và hướng dẫn
 /netstat - Báo cáo hệ thống: Speedtest, CPU, RAM, Disk, IP Public
+/otp - Lấy mã xác thực đăng ký tài khoản (VD: /otp admin)
 
 Bot **LoopStudioBot** - Giám sát server tự động.
 """
@@ -67,6 +68,49 @@ async def cmd_netstat(update: Update, context: ContextTypes.DEFAULT_TYPE) -> Non
         await sent.edit_text(f"❌ Lỗi: {str(e)}")
 
 
+async def cmd_otp(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    """Xử lý /otp - Lấy mã xác thực tài khoản."""
+    _log_access(update, "/otp")
+    if not context.args:
+        await update.message.reply_text("❌ Vui lòng nhập username. Ví dụ: `/otp admin`", parse_mode="Markdown")
+        return
+    
+    username = context.args[0]
+    user = update.effective_user
+    sent = await update.message.reply_text(f"⏳ Đang lấy mã OTP cho tài khoản `{username}`...", parse_mode="Markdown")
+    
+    from ..utils.bot_logger import WEB_APP_URL
+    import requests
+
+    if not WEB_APP_URL:
+        await sent.edit_text("❌ Bot chưa cấu hình liên kết Web App.")
+        return
+
+    try:
+        r = requests.post(f"{WEB_APP_URL.rstrip('/')}/api/bot/otp", json={
+            "username": username,
+            "telegram_user_id": user.id
+        }, timeout=5)
+        
+        if r.status_code == 200:
+            data = r.json()
+            otp = data.get("otp")
+            await sent.edit_text(
+                f"✅ Mã OTP của bạn cho tài khoản **{username}** là: `{otp}`\n\n"
+                f"Vui lòng nhập mã này trên web để kích hoạt tài khoản.", 
+                parse_mode="Markdown"
+            )
+        else:
+            try:
+                err = r.json().get("error", "Lỗi không xác định")
+            except Exception:
+                err = "Lỗi phản hồi API"
+            await sent.edit_text(f"❌ Không thể lấy mã OTP: {err}")
+    except Exception as e:
+        logger.exception("OTP error: %s", str(e))
+        await sent.edit_text(f"❌ Lỗi kết nối đến Web App: {str(e)}")
+
+
 def register_handlers(application) -> None:
     """Đăng ký tất cả handlers vào application."""
     from telegram.ext import CommandHandler
@@ -74,4 +118,5 @@ def register_handlers(application) -> None:
     application.add_handler(CommandHandler("start", cmd_start))
     application.add_handler(CommandHandler("help", cmd_help))
     application.add_handler(CommandHandler("netstat", cmd_netstat))
-    logger.info("Handlers registered: start, help, netstat")
+    application.add_handler(CommandHandler("otp", cmd_otp))
+    logger.info("Handlers registered: start, help, netstat, otp")

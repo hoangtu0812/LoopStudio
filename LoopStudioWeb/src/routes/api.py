@@ -22,3 +22,31 @@ def bot_log():
         db.session.add(log)
         db.session.commit()
     return "", 204
+
+@api_bp.route("/bot/otp", methods=["POST"])
+def bot_otp():
+    """Bot gọi để lấy mã OTP cho user đăng ký."""
+    import random
+    from ..models import User
+
+    data = request.get_json() or {}
+    username = data.get("username")
+    telegram_id = data.get("telegram_user_id")
+
+    if not username:
+        return {"error": "Thiếu username."}, 400
+
+    user = User.query.filter_by(username=username).first()
+    if not user:
+        return {"error": f"Không tìm thấy người dùng '{username}'."}, 404
+    
+    if user.is_active:
+        return {"error": f"Tài khoản '{username}' đã kích hoạt."}, 400
+
+    otp = str(random.randint(100000, 999999))
+    user.otp_code = otp
+    if telegram_id:
+        user.telegram_id = str(telegram_id)
+    db.session.commit()
+
+    return {"status": "ok", "otp": otp}, 200

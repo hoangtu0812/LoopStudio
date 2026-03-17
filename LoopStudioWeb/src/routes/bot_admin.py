@@ -3,7 +3,7 @@ from flask import Blueprint, render_template, request, flash, redirect, url_for
 from flask_login import login_required, current_user
 
 from ..app import db
-from ..models import BotAccessLog
+from ..models import BotAccessLog, User
 from ..services.telegram_service import send_telegram_message
 
 bot_admin_bp = Blueprint("bot_admin", __name__)
@@ -37,3 +37,45 @@ def send_notification():
         else:
             flash("Vui lòng nhập Chat ID và nội dung.", "error")
     return render_template("bot_admin/send.html")
+
+
+@bot_admin_bp.route("/users")
+@login_required
+def users_list():
+    if not current_user.is_admin:
+        flash("Bạn không có quyền truy cập.", "error")
+        return redirect(url_for("main.dashboard"))
+    users = User.query.order_by(User.id).all()
+    return render_template("bot_admin/users.html", users=users)
+
+
+@bot_admin_bp.route("/users/<int:id>/toggle_admin", methods=["POST"])
+@login_required
+def toggle_admin(id):
+    if not current_user.is_admin:
+        flash("Bạn không có quyền.", "error")
+        return redirect(url_for("main.dashboard"))
+    user = User.query.get_or_404(id)
+    if user.id == current_user.id:
+        flash("Không thể tự gỡ quyền admin của chính mình.", "warning")
+        return redirect(url_for("bot_admin.users_list"))
+    user.is_admin = not user.is_admin
+    db.session.commit()
+    flash(f"Đã cập nhật quyền cho {user.username}.", "success")
+    return redirect(url_for("bot_admin.users_list"))
+
+
+@bot_admin_bp.route("/users/<int:id>/delete", methods=["POST"])
+@login_required
+def delete_user(id):
+    if not current_user.is_admin:
+        flash("Bạn không có quyền.", "error")
+        return redirect(url_for("main.dashboard"))
+    user = User.query.get_or_404(id)
+    if user.id == current_user.id:
+        flash("Không thể tự xóa chính mình.", "warning")
+        return redirect(url_for("bot_admin.users_list"))
+    db.session.delete(user)
+    db.session.commit()
+    flash(f"Đã xóa tài khoản {user.username}.", "success")
+    return redirect(url_for("bot_admin.users_list"))

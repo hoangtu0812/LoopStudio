@@ -101,11 +101,18 @@
                             </a>
                             {% if current_user.is_admin %}
                             <a href="{{ url_for('bot_admin.index') }}"
-                                class="flex items-center px-3 py-2.5 text-sm font-medium rounded-xl hover:bg-gray-100/50 dark:hover:bg-gray-700/50 hover:shadow-sm transition-all duration-200 {% if 'bot_admin' in request.endpoint %}bg-gray-100/60 text-brand-700 dark:bg-gray-700/60 dark:text-brand-300 shadow-sm border border-gray-200/40 dark:border-gray-600/50{% endif %}">
+                                class="flex items-center px-3 py-2.5 text-sm font-medium rounded-xl hover:bg-gray-100/50 dark:hover:bg-gray-700/50 hover:shadow-sm transition-all duration-200 {% if request.endpoint == 'bot_admin.index' %}bg-gray-100/60 text-brand-700 dark:bg-gray-700/60 dark:text-brand-300 shadow-sm border border-gray-200/40 dark:border-gray-600/50{% endif %}">
                                 <svg class="mr-3 h-5 w-5 opacity-75" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.25 3v1.5M4.5 8.25H3m18 0h-1.5M4.5 12H3m18 0h-1.5m-15 3.75H3m18 0h-1.5M8.25 19.5V21M12 3v1.5m0 15V21m3.75-18v1.5m0 15V21m-9-1.5h10.5a2.25 2.25 0 002.25-2.25V6.75a2.25 2.25 0 00-2.25-2.25H6.75A2.25 2.25 0 004.5 6.75v10.5a2.25 2.25 0 002.25 2.25zm.75-12h9v9h-9v-9z"></path>
                                 </svg>
                                 Bot Admin
+                            </a>
+                            <a href="{{ url_for('bot_admin.users_list') }}"
+                                class="flex items-center px-3 py-2.5 text-sm font-medium rounded-xl hover:bg-gray-100/50 dark:hover:bg-gray-700/50 hover:shadow-sm transition-all duration-200 {% if request.endpoint == 'bot_admin.users_list' %}bg-gray-100/60 text-brand-700 dark:bg-gray-700/60 dark:text-brand-300 shadow-sm border border-gray-200/40 dark:border-gray-600/50{% endif %}">
+                                <svg class="mr-3 h-5 w-5 opacity-75" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952 4.125 4.125 0 00-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 018.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0111.964-3.07M12 6.375a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zm8.25 2.25a2.625 2.625 0 11-5.25 0 2.625 2.625 0 015.25 0z" />
+                                </svg>
+                                Q.lý Người dùng
                             </a>
                             {% endif %}
                         </nav>
@@ -152,11 +159,18 @@
                 </a>
                 {% if current_user.is_admin %}
                 <a href="{{ url_for('bot_admin.index') }}"
-                    class="flex items-center px-3 py-2.5 text-sm font-medium rounded-xl hover:bg-white/50 dark:hover:bg-gray-700/50 hover:shadow-sm transition-all duration-200 {% if 'bot_admin' in request.endpoint %}bg-white/60 text-brand-700 dark:bg-gray-700/60 dark:text-brand-300 shadow-sm border border-white/40 dark:border-gray-600/50{% endif %}">
+                    class="flex items-center px-3 py-2.5 text-sm font-medium rounded-xl hover:bg-white/50 dark:hover:bg-gray-700/50 hover:shadow-sm transition-all duration-200 {% if request.endpoint == 'bot_admin.index' %}bg-white/60 text-brand-700 dark:bg-gray-700/60 dark:text-brand-300 shadow-sm border border-white/40 dark:border-gray-600/50{% endif %}">
                     <svg class="mr-3 h-5 w-5 opacity-75" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.25 3v1.5M4.5 8.25H3m18 0h-1.5M4.5 12H3m18 0h-1.5m-15 3.75H3m18 0h-1.5M8.25 19.5V21M12 3v1.5m0 15V21m3.75-18v1.5m0 15V21m-9-1.5h10.5a2.25 2.25 0 002.25-2.25V6.75a2.25 2.25 0 00-2.25-2.25H6.75A2.25 2.25 0 004.5 6.75v10.5a2.25 2.25 0 002.25 2.25zm.75-12h9v9h-9v-9z"></path>
                     </svg>
                     Bot Admin
+                </a>
+                <a href="{{ url_for('bot_admin.users_list') }}"
+                    class="flex items-center px-3 py-2.5 text-sm font-medium rounded-xl hover:bg-white/50 dark:hover:bg-gray-700/50 hover:shadow-sm transition-all duration-200 {% if request.endpoint == 'bot_admin.users_list' %}bg-white/60 text-brand-700 dark:bg-gray-700/60 dark:text-brand-300 shadow-sm border border-white/40 dark:border-gray-600/50{% endif %}">
+                    <svg class="mr-3 h-5 w-5 opacity-75" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952 4.125 4.125 0 00-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 018.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0111.964-3.07M12 6.375a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zm8.25 2.25a2.625 2.625 0 11-5.25 0 2.625 2.625 0 015.25 0z" />
+                    </svg>
+                    Q.lý Người dùng
                 </a>
                 {% endif %}
             </nav>

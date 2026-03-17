@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+{% block title %}Xác thực OTP - Loop Studio{% endblock %}
+
+{% block content %}
+<div class="min-h-[80vh] flex flex-col justify-center animate-[fadeIn_0.5s_ease-out] py-12 sm:px-6 lg:px-8">
+    <div class="sm:mx-auto sm:w-full sm:max-w-md text-center mb-8">
+        <h2 class="text-3xl font-extrabold tracking-tight text-gray-900 dark:text-white">
+            Xác thực OTP
+        </h2>
+        <p class="mt-2 text-sm text-gray-500 dark:text-gray-400 max-w-sm mx-auto">
+            Nhập mã gồm 6 chữ số từ <strong class="text-brand-600 dark:text-brand-400">@LoopStudioBot</strong> trên Telegram bằng lệnh <code class="px-1.5 py-0.5 rounded bg-gray-100 dark:bg-gray-800">/otp {{ username or 'username' }}</code> để tiếp tục
+        </p>
+    </div>
+
+    <div class="sm:mx-auto sm:w-full sm:max-w-md">
+        <div class="bg-white/80 dark:bg-gray-800/80 backdrop-blur-xl shadow-[0_4px_24px_rgba(0,0,0,0.04)] dark:shadow-[0_4px_24px_rgba(0,0,0,0.2)] border border-gray-200/50 dark:border-gray-700/50 sm:rounded-2xl p-8 relative overflow-hidden">
+            <!-- Decorative blur -->
+            <div class="absolute -top-12 -right-12 w-40 h-40 bg-brand-500/10 rounded-full blur-3xl pointer-events-none"></div>
+            
+            <form method="POST" class="space-y-6 relative z-10">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                <input type="hidden" name="username" value="{{ username or '' }}"/>
+                
+                <div>
+                    <label for="otp" class="block text-sm font-semibold text-gray-900 dark:text-white">Mã OTP</label>
+                    <div class="mt-2 relative rounded-xl shadow-sm">
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <svg class="h-5 w-5 text-gray-400 group-focus-within:text-brand-500 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
+                            </svg>
+                        </div>
+                        <input type="text" name="otp" id="otp" required autocomplete="off" placeholder="123456" maxlength="6"
+                               class="block w-full pl-10 pr-3 py-2.5 bg-gray-50/50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-700 rounded-xl text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500 sm:text-sm tracking-widest font-mono text-center transition-all">
+                    </div>
+                </div>
+
+                <button type="submit" class="w-full flex justify-center py-2.5 px-4 border border-transparent rounded-xl shadow-md text-sm font-semibold text-white bg-gradient-to-r from-brand-500 to-brand-600 hover:from-brand-400 hover:to-brand-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-500 dark:focus:ring-offset-gray-900 transition-all duration-200 transform hover:-translate-y-0.5">
+                    Xác thực & Đăng nhập
+                </button>
+            </form>
+            
+            <div class="mt-6">
+                <div class="relative">
+                    <div class="absolute inset-0 flex items-center">
+                        <div class="w-full border-t border-gray-200 dark:border-gray-700"></div>
+                    </div>
+                    <div class="relative flex justify-center text-sm">
+                        <span class="px-2 bg-white/80 dark:bg-gray-800/80 text-gray-500">Hoặc</span>
+                    </div>
+                </div>
+
+                <div class="mt-6 text-center text-sm">
+                    <a href="{{ url_for('auth.login') }}" class="font-medium text-brand-600 dark:text-brand-400 hover:text-brand-500 dark:hover:text-brand-300 transition-colors">
+                        Quay về đăng nhập
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
