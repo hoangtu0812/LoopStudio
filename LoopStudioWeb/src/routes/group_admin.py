@@ -8,6 +8,7 @@ from ..models import AppPermission, User, UserGroup
 group_admin_bp = Blueprint("group_admin", __name__)
 
 APP_DEFINITIONS = [
+    ("calendar", "Calendar chung"),
     ("schedule", "Thời khóa biểu"),
     ("todo", "Công việc"),
     ("dashboard", "Dashboard quản trị"),

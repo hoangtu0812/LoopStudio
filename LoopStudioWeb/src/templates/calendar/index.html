@@ -1,0 +1,109 @@
+{% extends "base.html" %}
+{% block title %}Calendar chung - Loop Studio{% endblock %}
+
+{% block content %}
+<div class="space-y-6 lg:space-y-8">
+    <div class="flex flex-col md:flex-row md:items-end justify-between gap-4">
+        <div>
+            <h1 class="text-3xl font-extrabold tracking-tight">
+                <span class="bg-clip-text text-transparent bg-gradient-to-r from-gray-900 to-gray-600 dark:from-white dark:to-gray-300">
+                    Calendar chung
+                </span>
+            </h1>
+            <p class="text-sm md:text-base text-gray-500 dark:text-gray-400 font-medium mt-1">
+                Tổng hợp ca học, công việc và meeting tại một nơi.
+            </p>
+        </div>
+        <div class="flex gap-2">
+            <a href="{{ url_for('calendar.index', d=(anchor.replace(day=1)).isoformat()) }}" class="inline-flex items-center px-3 py-2 text-xs font-semibold rounded-lg text-gray-700 bg-white border border-gray-200 hover:bg-gray-50 dark:text-gray-200 dark:bg-gray-800 dark:border-gray-700 dark:hover:bg-gray-700">
+                Đầu tháng
+            </a>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 xl:grid-cols-3 gap-6">
+        <div class="xl:col-span-1">
+            <div class="bg-white/80 dark:bg-gray-800/80 rounded-2xl border border-gray-200/50 dark:border-gray-700/50 p-6">
+                <h2 class="text-lg font-bold text-gray-900 dark:text-white">Tạo meeting / sự kiện</h2>
+                <form method="post" class="mt-4 space-y-3">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-900 dark:text-gray-200 mb-1">Tiêu đề</label>
+                        <input name="title" required class="block w-full rounded-xl border-0 py-2.5 px-3 text-sm bg-white dark:bg-gray-900/50 text-gray-900 dark:text-white ring-1 ring-gray-300 dark:ring-gray-700 focus:ring-2 focus:ring-brand-500"/>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-900 dark:text-gray-200 mb-1">Loại sự kiện</label>
+                        <select name="event_type" class="block w-full rounded-xl border-0 py-2.5 px-3 text-sm bg-white dark:bg-gray-900/50 text-gray-900 dark:text-white ring-1 ring-gray-300 dark:ring-gray-700 focus:ring-2 focus:ring-brand-500">
+                            <option value="meeting">Meeting</option>
+                            <option value="personal">Cá nhân</option>
+                            <option value="reminder">Nhắc việc</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-900 dark:text-gray-200 mb-1">Bắt đầu</label>
+                        <input type="datetime-local" name="start_at" required class="block w-full rounded-xl border-0 py-2.5 px-3 text-sm bg-white dark:bg-gray-900/50 text-gray-900 dark:text-white ring-1 ring-gray-300 dark:ring-gray-700 focus:ring-2 focus:ring-brand-500"/>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-900 dark:text-gray-200 mb-1">Kết thúc</label>
+                        <input type="datetime-local" name="end_at" required class="block w-full rounded-xl border-0 py-2.5 px-3 text-sm bg-white dark:bg-gray-900/50 text-gray-900 dark:text-white ring-1 ring-gray-300 dark:ring-gray-700 focus:ring-2 focus:ring-brand-500"/>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-900 dark:text-gray-200 mb-1">Mô tả</label>
+                        <textarea name="description" rows="2" class="block w-full rounded-xl border-0 py-2.5 px-3 text-sm bg-white dark:bg-gray-900/50 text-gray-900 dark:text-white ring-1 ring-gray-300 dark:ring-gray-700 focus:ring-2 focus:ring-brand-500"></textarea>
+                    </div>
+                    <button type="submit" class="w-full inline-flex items-center justify-center rounded-xl bg-gradient-to-r from-brand-500 to-brand-600 px-4 py-2.5 text-sm font-semibold text-white shadow-md hover:from-brand-400 hover:to-brand-500">
+                        Tạo sự kiện
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <div class="xl:col-span-2 space-y-6">
+            <div class="bg-white/80 dark:bg-gray-800/80 rounded-2xl border border-gray-200/50 dark:border-gray-700/50 overflow-hidden">
+                <div class="grid grid-cols-7 bg-gray-50/60 dark:bg-gray-900/40 border-b border-gray-100 dark:border-gray-700/50">
+                    {% for d in week_days %}
+                    <div class="px-3 py-2 text-center border-r border-gray-100 dark:border-gray-700/40 last:border-r-0">
+                        <p class="text-[11px] font-semibold text-gray-500 dark:text-gray-400 uppercase">{{ d.strftime('%a') }}</p>
+                        <p class="text-sm font-bold text-gray-900 dark:text-white">{{ d.strftime('%d/%m') }}</p>
+                    </div>
+                    {% endfor %}
+                </div>
+                <div class="grid grid-cols-7 min-h-[380px]">
+                    {% for d in week_days %}
+                    {% set key = d.isoformat() %}
+                    <div class="border-r border-gray-100 dark:border-gray-700/40 last:border-r-0 p-2 space-y-2">
+                        {% for e in events_by_day[key] %}
+                        <a href="{{ e.source_url or '#' }}" class="block rounded-lg p-2 text-xs
+                            {% if e.event_type == 'class' %}bg-blue-100 text-blue-800 dark:bg-blue-900/40 dark:text-blue-300
+                            {% elif e.event_type == 'todo' %}bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300
+                            {% else %}bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300
+                            {% endif %}">
+                            <p class="font-semibold truncate">{{ e.title }}</p>
+                            <p class="opacity-80">{{ e.start_at.strftime('%H:%M') }} - {{ e.end_at.strftime('%H:%M') }}</p>
+                        </a>
+                        {% else %}
+                        <p class="text-[11px] text-gray-400 italic">Không có sự kiện</p>
+                        {% endfor %}
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <div class="bg-white/80 dark:bg-gray-800/80 rounded-2xl border border-gray-200/50 dark:border-gray-700/50 p-5">
+                <h2 class="text-lg font-bold text-gray-900 dark:text-white">Sự kiện hôm nay</h2>
+                <div class="mt-3 space-y-2">
+                    {% for e in today_events %}
+                    <div class="rounded-lg px-3 py-2 text-sm bg-gray-50 dark:bg-gray-900/40 border border-gray-200 dark:border-gray-700">
+                        <p class="font-semibold text-gray-900 dark:text-white">{{ e.title }}</p>
+                        <p class="text-xs text-gray-500 dark:text-gray-400">{{ e.start_at.strftime('%H:%M') }} - {{ e.end_at.strftime('%H:%M') }} · {{ e.event_type }}</p>
+                    </div>
+                    {% else %}
+                    <p class="text-sm text-gray-500 dark:text-gray-400 italic">Hôm nay chưa có sự kiện nào.</p>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+

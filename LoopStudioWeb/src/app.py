@@ -61,6 +61,7 @@ def create_app() -> Flask:
     from .routes.bot_admin import bot_admin_bp
     from .routes.group_admin import group_admin_bp
     from .routes.admin_dashboard import admin_dashboard_bp
+    from .routes.calendar import calendar_bp
     from .routes.schedule import schedule_bp
     from .routes.todo import todo_bp
     from .routes.api import api_bp
@@ -72,12 +73,14 @@ def create_app() -> Flask:
     app.register_blueprint(bot_admin_bp, url_prefix="/bot")
     app.register_blueprint(group_admin_bp, url_prefix="/groups")
     app.register_blueprint(admin_dashboard_bp, url_prefix="/admin-dashboard")
+    app.register_blueprint(calendar_bp, url_prefix="/calendar")
     app.register_blueprint(schedule_bp, url_prefix="/schedule")
     app.register_blueprint(todo_bp, url_prefix="/todo")
 
     from .models import AppPermission
 
     APP_KEY_BY_BLUEPRINT = {
+        "calendar": "calendar",
         "schedule": "schedule",
         "todo": "todo",
         "admin_dashboard": "dashboard",
@@ -129,12 +132,14 @@ def create_app() -> Flask:
             db.session.commit()
             app.logger.info("Đã tạo user admin/admin - đổi mật khẩu ngay!")
 
+        app_keys = ["calendar", "schedule", "todo", "dashboard", "bot_admin"]
+
         # tạo group default nếu chưa có: full quyền cho mọi app
         if UserGroup.query.count() == 0:
             default_group = UserGroup(name="default", description="Nhóm mặc định")
             db.session.add(default_group)
             db.session.flush()
-            for key in ["schedule", "todo", "dashboard", "bot_admin"]:
+            for key in app_keys:
                 db.session.add(
                     AppPermission(
                         group_id=default_group.id,
@@ -142,6 +147,18 @@ def create_app() -> Flask:
                         can_access=True,
                     )
                 )
+            db.session.commit()
+
+        # đảm bảo mọi group đều có bản ghi permission cho các app mới
+        groups = UserGroup.query.all()
+        changed = False
+        for g in groups:
+            existing = {p.app_key for p in g.app_permissions}
+            for key in app_keys:
+                if key not in existing:
+                    db.session.add(AppPermission(group_id=g.id, app_key=key, can_access=False))
+                    changed = True
+        if changed:
             db.session.commit()
 
     from .services.schedule_notifier import start_scheduler
