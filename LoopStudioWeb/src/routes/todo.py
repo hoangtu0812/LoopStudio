@@ -1,5 +1,5 @@
 """Quản lý công việc cá nhân (weekly/deadline)."""
-from datetime import datetime
+from datetime import datetime, timedelta
 
 from flask import Blueprint, flash, redirect, render_template, request, url_for
 from flask_login import login_required
@@ -35,7 +35,12 @@ def index():
             flash("Loại công việc không hợp lệ.", "error")
             return redirect(url_for("todo.index"))
 
-        task = TodoTask(title=title, note=note or None, task_type=task_type, is_active=True)
+        task = TodoTask(
+            title=title,
+            note=note or None,
+            task_type=task_type,
+            is_active=True,
+        )
 
         if task_type == "weekly":
             weekday_raw = request.form.get("weekday")
@@ -106,3 +111,115 @@ def delete(id):
     db.session.commit()
     flash("Đã xóa công việc.", "success")
     return redirect(url_for("todo.index"))
+
+
+@todo_bp.route("/board")
+@login_required
+def board():
+    """Kanban board: phân cột theo status."""
+    tasks = TodoTask.query.filter_by(is_active=True).all()
+    columns: dict[str, list[TodoTask]] = {"backlog": [], "doing": [], "done": []}
+    for t in tasks:
+        col = t.status or "backlog"
+        if col not in columns:
+            col = "backlog"
+        columns[col].append(t)
+
+    for col_tasks in columns.values():
+        col_tasks.sort(key=lambda t: (-(t.priority or 2), t.deadline or t.start_at or t.created_at))
+
+    return render_template("todo/board.html", columns=columns)
+
+
+@todo_bp.route("/<int:id>/move", methods=["POST"])
+@login_required
+def move(id: int):
+    """Đổi status của task (dùng cho Kanban)."""
+    task = TodoTask.query.get_or_404(id)
+    new_status = request.form.get("status") or ""
+    if new_status not in {"backlog", "doing", "done"}:
+        flash("Trạng thái không hợp lệ.", "error")
+        return redirect(url_for("todo.board"))
+    task.status = new_status
+    db.session.commit()
+    return redirect(url_for("todo.board"))
+
+
+@todo_bp.route("/gantt")
+@login_required
+def gantt():
+    tasks = TodoTask.query.filter_by(is_active=True).all()
+    prepared_rows: list[dict] = []
+    spans: list[tuple[datetime, datetime]] = []
+
+    for t in tasks:
+        start = t.start_at or t.created_at
+        end = t.deadline or start
+        if not start or not end:
+            continue
+        if end < start:
+            end = start
+        spans.append((start, end))
+        prepared_rows.append(
+            {
+                "id": t.id,
+                "title": t.title,
+                "status": t.status or "backlog",
+                "start": start,
+                "end": end,
+                "start_label": start.strftime("%d/%m/%Y"),
+                "end_label": end.strftime("%d/%m/%Y"),
+            }
+        )
+
+    if not spans:
+        return render_template(
+            "todo/gantt.html",
+            gantt_rows=[],
+            week_headers=[],
+            month_groups=[],
+            total_weeks=0,
+        )
+
+    min_start = min(s for s, _ in spans)
+    max_end = max(e for _, e in spans)
+
+    timeline_start = min_start - timedelta(days=min_start.weekday())  # Monday
+    timeline_end = max_end + timedelta(days=(6 - max_end.weekday()))  # Sunday
+    total_days = max((timeline_end - timeline_start).days + 1, 1)
+    total_weeks = max((total_days + 6) // 7, 1)
+
+    week_starts = [timeline_start + timedelta(days=7 * i) for i in range(total_weeks)]
+    week_headers: list[dict] = []
+    month_groups: list[dict] = []
+    current_month = None
+    for ws in week_starts:
+        month_label = ws.strftime("%B")
+        if current_month != month_label:
+            month_groups.append({"label": month_label, "span": 0})
+            current_month = month_label
+        month_groups[-1]["span"] += 1
+        week_index_in_month = ((ws.day - 1) // 7) + 1
+        week_headers.append({"label": f"W{week_index_in_month}"})
+
+    gantt_rows: list[dict] = []
+    for row in prepared_rows:
+        start_offset_days = (row["start"] - timeline_start).total_seconds() / 86400
+        duration_days = max((row["end"] - row["start"]).total_seconds() / 86400, 0.75)
+        left_pct = (start_offset_days / total_days) * 100
+        width_pct = (duration_days / total_days) * 100
+        gantt_rows.append(
+            {
+                **row,
+                "left_pct": round(left_pct, 3),
+                "width_pct": round(width_pct, 3),
+            }
+        )
+
+    return render_template(
+        "todo/gantt.html",
+        gantt_rows=gantt_rows,
+        week_headers=week_headers,
+        month_groups=month_groups,
+        total_weeks=total_weeks,
+    )

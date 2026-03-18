@@ -1,0 +1,78 @@
+{% extends "base.html" %}
+{% block title %}Cấu hình group {{ group.name }}{% endblock %}
+
+{% block content %}
+<div class="space-y-6 lg:space-y-8">
+    <div class="flex flex-col md:flex-row md:items-end justify-between gap-4">
+        <div>
+            <h1 class="text-3xl font-extrabold tracking-tight">
+                <span class="bg-clip-text text-transparent bg-gradient-to-r from-gray-900 to-gray-600 dark:from-white dark:to-gray-300">
+                    Cấu hình group: {{ group.name }}
+                </span>
+            </h1>
+            <p class="text-sm md:text-base text-gray-500 dark:text-gray-400 mt-1">
+                Thiết lập quyền truy cập ứng dụng và gán người dùng vào group này.
+            </p>
+        </div>
+        <div class="flex-shrink-0">
+            <a href="{{ url_for('group_admin.index') }}" class="inline-flex items-center px-4 py-2.5 text-sm font-semibold rounded-xl text-gray-700 bg-white border border-gray-200 hover:bg-gray-50 dark:text-gray-200 dark:bg-gray-800 dark:border-gray-700 dark:hover:bg-gray-700">
+                ← Quay lại danh sách group
+            </a>
+        </div>
+    </div>
+
+    <form method="post" class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+
+        <div class="lg:col-span-1">
+            <div class="bg-white/80 dark:bg-gray-800/80 rounded-2xl border border-gray-200/50 dark:border-gray-700/50 p-6">
+                <h2 class="text-lg font-bold text-gray-900 dark:text-white mb-4">Quyền ứng dụng</h2>
+                <div class="space-y-3">
+                    {% for key, label in app_definitions %}
+                    <label class="flex items-center justify-between gap-2 text-sm">
+                        <div>
+                            <span class="font-medium text-gray-900 dark:text-white">{{ label }}</span>
+                            <span class="block text-xs text-gray-500 dark:text-gray-400 opacity-80">{{ key }}</span>
+                        </div>
+                        <input type="checkbox" name="app_{{ key }}" {% if perms.get(key) %}checked{% endif %} class="h-4 w-4 rounded border-gray-300 dark:border-gray-600 text-brand-500 focus:ring-brand-500">
+                    </label>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <div class="lg:col-span-2">
+            <div class="bg-white/80 dark:bg-gray-800/80 rounded-2xl border border-gray-200/50 dark:border-gray-700/50 p-6">
+                <h2 class="text-lg font-bold text-gray-900 dark:text-white mb-4">Thành viên trong group</h2>
+                <div class="max-h-[420px] overflow-y-auto border border-gray-100 dark:border-gray-700 rounded-xl divide-y divide-gray-100 dark:divide-gray-700/60">
+                    {% for u in users %}
+                    <label class="flex items-center justify-between px-4 py-2.5 text-sm hover:bg-gray-50 dark:hover:bg-gray-800/60 transition-colors">
+                        <div>
+                            <span class="font-semibold text-gray-900 dark:text-white">{{ u.username }}</span>
+                            {% if u.full_name %}
+                            <span class="ml-2 text-xs text-gray-500 dark:text-gray-400">{{ u.full_name }}</span>
+                            {% endif %}
+                            {% if u.is_admin %}
+                            <span class="ml-2 inline-flex items-center px-1.5 py-0.5 rounded-full bg-purple-100 text-purple-700 dark:bg-purple-900/40 dark:text-purple-300 text-[11px] font-semibold">Admin</span>
+                            {% endif %}
+                        </div>
+                        <input type="checkbox" name="users" value="{{ u.id }}" {% if u.id in member_ids %}checked{% endif %} class="h-4 w-4 rounded border-gray-300 dark:border-gray-600 text-brand-500 focus:ring-brand-500">
+                    </label>
+                    {% else %}
+                    <div class="px-4 py-6 text-center text-gray-500 dark:text-gray-400 text-sm">
+                        Chưa có user nào trong hệ thống.
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <div class="mt-4 flex justify-end">
+                <button type="submit" class="inline-flex items-center px-6 py-2.5 rounded-xl bg-gradient-to-r from-brand-500 to-brand-600 text-sm font-semibold text-white shadow-md hover:from-brand-400 hover:to-brand-500">
+                    Lưu cấu hình
+                </button>
+            </div>
+        </div>
+    </form>
+</div>
+{% endblock %}
+

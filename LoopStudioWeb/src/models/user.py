@@ -2,6 +2,7 @@ from flask_login import UserMixin
 from werkzeug.security import check_password_hash, generate_password_hash
 
 from ..app import db
+from .user_group import user_groups_users
 
 
 class User(UserMixin, db.Model):
@@ -15,6 +16,12 @@ class User(UserMixin, db.Model):
     is_active = db.Column(db.Boolean, default=True)  # True for existing, False for new unverified
     otp_code = db.Column(db.String(6), nullable=True)
     telegram_id = db.Column(db.String(50), nullable=True)
+
+    groups = db.relationship(
+        "UserGroup",
+        secondary=user_groups_users,
+        back_populates="users",
+    )
 
     def set_password(self, password: str) -> None:
         self.password_hash = generate_password_hash(password)

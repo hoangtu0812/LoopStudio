@@ -1,0 +1,88 @@
+{% extends "base.html" %}
+{% block title %}Gantt công việc - Loop Studio{% endblock %}
+
+{% block content %}
+<div class="space-y-6 lg:space-y-8">
+    <div class="flex flex-col md:flex-row md:items-end justify-between gap-4">
+        <div>
+            <h1 class="text-3xl font-extrabold tracking-tight">
+                <span class="bg-clip-text text-transparent bg-gradient-to-r from-gray-900 to-gray-600 dark:from-white dark:to-gray-300">
+                    Gantt công việc
+                </span>
+            </h1>
+            <p class="text-sm md:text-base text-gray-500 dark:text-gray-400 mt-1">
+                Xem timeline từ ngày bắt đầu tới deadline của từng công việc.
+            </p>
+        </div>
+        <div class="flex gap-2">
+            <a href="{{ url_for('todo.board') }}" class="inline-flex items-center px-4 py-2.5 text-sm font-semibold rounded-xl text-gray-700 bg-white border border-gray-200 hover:bg-gray-50 dark:text-gray-200 dark:bg-gray-800 dark:border-gray-700 dark:hover:bg-gray-700">
+                Kanban
+            </a>
+            <a href="{{ url_for('todo.index') }}" class="inline-flex items-center px-4 py-2.5 text-sm font-semibold rounded-xl text-gray-700 bg-white border border-gray-200 hover:bg-gray-50 dark:text-gray-200 dark:bg-gray-800 dark:border-gray-700 dark:hover:bg-gray-700">
+                Danh sách
+            </a>
+        </div>
+    </div>
+
+    <div class="bg-[#103458] dark:bg-[#103458] rounded-2xl border border-cyan-700/40 overflow-hidden">
+        {% if gantt_rows %}
+        <div class="grid grid-cols-[220px_minmax(0,1fr)]">
+            <div class="border-r border-cyan-700/50 p-4 bg-[#124169]">
+                <h2 class="text-lg font-bold text-cyan-50 leading-tight">PROJECT<br/>MANAGEMENT</h2>
+            </div>
+            <div class="overflow-x-auto">
+                <div class="min-w-[900px]">
+                    <div class="grid border-b border-cyan-700/50" style="grid-template-columns: repeat({{ total_weeks }}, minmax(56px, 1fr));">
+                        {% for m in month_groups %}
+                        <div class="text-center py-3 text-cyan-50 font-semibold border-r border-cyan-700/30" style="grid-column: span {{ m.span }};">
+                            {{ m.label }}
+                        </div>
+                        {% endfor %}
+                    </div>
+                    <div class="grid border-b border-cyan-700/50" style="grid-template-columns: repeat({{ total_weeks }}, minmax(56px, 1fr));">
+                        {% for wk in week_headers %}
+                        <div class="text-center py-2 text-xs text-cyan-100/90 font-semibold border-r border-cyan-700/20">
+                            {{ wk.label }}
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-[220px_minmax(0,1fr)]">
+            <div class="border-r border-cyan-700/50 bg-[#124169]">
+                {% for row in gantt_rows %}
+                <div class="h-16 px-4 flex flex-col justify-center border-b border-cyan-700/35">
+                    <p class="text-cyan-50 font-semibold leading-tight truncate">{{ row.title }}</p>
+                    <p class="text-[11px] text-cyan-100/75">{{ row.start_label }} → {{ row.end_label }}</p>
+                </div>
+                {% endfor %}
+            </div>
+
+            <div class="overflow-x-auto">
+                <div class="min-w-[900px]">
+                    {% for row in gantt_rows %}
+                    <div class="relative h-16 border-b border-cyan-700/35"
+                         style="background-image: repeating-linear-gradient(to right, rgba(34,211,238,0.16) 0, rgba(34,211,238,0.16) 1px, transparent 1px, transparent calc(100% / {{ total_weeks }}));">
+                        <div class="absolute top-1/2 -translate-y-1/2 h-7 rounded-full shadow-md
+                            {% if row.status == 'doing' %}bg-amber-400
+                            {% elif row.status == 'done' %}bg-emerald-400
+                            {% else %}bg-sky-300
+                            {% endif %}"
+                            style="left: {{ row.left_pct }}%; width: {{ row.width_pct }}%;">
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+        {% else %}
+        <div class="py-12 text-center text-sm text-cyan-100/80">
+            Chưa có dữ liệu công việc để hiển thị gantt.
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+

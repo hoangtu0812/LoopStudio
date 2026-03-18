@@ -22,5 +22,10 @@ class TodoTask(db.Model):
     reminder_minutes_before = db.Column(db.Integer, nullable=False, default=30)
     deadline_reminder_sent = db.Column(db.Boolean, default=False)
 
+    # Kanban / quản lý tiến độ
+    status = db.Column(db.String(20), nullable=False, default="backlog")  # backlog | doing | done
+    priority = db.Column(db.Integer, nullable=False, default=2)  # 1=thấp, 2=trung bình, 3=cao
+    lane = db.Column(db.String(50), nullable=True)
+
     is_active = db.Column(db.Boolean, default=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
