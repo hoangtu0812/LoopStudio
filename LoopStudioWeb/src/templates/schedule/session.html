@@ -180,6 +180,36 @@
                 {% endif %}
             </div>
 
+            <!-- Quick Telegram Notify -->
+            <div class="bg-white/80 dark:bg-gray-800/80 backdrop-blur-xl shadow-[0_4px_24px_rgba(0,0,0,0.04)] dark:shadow-[0_4px_24px_rgba(0,0,0,0.2)] border border-gray-200/50 dark:border-gray-700/50 sm:rounded-3xl p-6 sm:p-8">
+                <h3 class="text-base font-semibold text-gray-900 dark:text-white flex items-center gap-x-2">
+                    <svg class="h-5 w-5 text-brand-500" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M21 6.75a.75.75 0 00-1.08-.67l-15 7.5a.75.75 0 000 1.34l4.73 2.365 2.365 4.73a.75.75 0 001.34 0l7.5-15a.75.75 0 00-.67-1.08z" />
+                    </svg>
+                    Gửi Telegram ngay
+                </h3>
+                <p class="mt-2 text-sm text-gray-500 dark:text-gray-400">
+                    Bấm gửi để gửi ngay nội dung nhắc lịch mặc định (giống thông báo schedule tự động), không cần nhập tay.
+                </p>
+
+                {% if telegram_targets %}
+                <div class="mt-4 flex flex-wrap gap-2">
+                    {% for cfg in telegram_targets %}
+                    <span class="inline-flex items-center rounded-lg px-2 py-1 text-xs font-medium bg-brand-50 text-brand-700 dark:bg-brand-900/40 dark:text-brand-300 border border-brand-100 dark:border-brand-800/50">
+                        {{ cfg.config_type }}: {{ cfg.chat_id }}
+                    </span>
+                    {% endfor %}
+                </div>
+                {% endif %}
+
+                <form method="post" action="{{ url_for('schedule.notify_session', id=session.id) }}" class="mt-4">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                    <button type="submit" class="w-full inline-flex items-center justify-center rounded-xl bg-gradient-to-r from-brand-500 to-brand-600 dark:from-brand-600 dark:to-brand-700 px-4 py-2.5 text-sm font-semibold text-white shadow-md shadow-brand-500/20 hover:shadow-lg hover:from-brand-400 hover:to-brand-500 dark:hover:from-brand-500 dark:hover:to-brand-600 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-500 transition-all duration-200">
+                        Gửi thông báo mặc định
+                    </button>
+                </form>
+            </div>
+
         </div>
     </div>
 </div>

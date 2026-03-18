@@ -44,6 +44,7 @@ services:
       - SECRET_KEY=${SECRET_KEY:-change-me-in-production}
       - DATABASE_URL=postgresql://loopstudio:${POSTGRES_PASSWORD:-loopstudio}@db:5432/loopstudio
       - BOT_TOKEN=${BOT_TOKEN}
+      - TIMEZONE=${TIMEZONE:-Asia/Ho_Chi_Minh}
 
 volumes:
   loopstudio_data:

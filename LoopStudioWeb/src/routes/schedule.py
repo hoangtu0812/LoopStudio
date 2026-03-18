@@ -110,7 +110,15 @@ def schedule_sessions(id):
 @login_required
 def session_detail(id):
     session = ScheduleSession.query.get_or_404(id)
-    return render_template("schedule/session.html", session=session)
+    telegram_targets = NotificationConfig.query.filter(
+        NotificationConfig.enabled == True,  # noqa: E712
+        NotificationConfig.chat_id != "",
+    ).all()
+    return render_template(
+        "schedule/session.html",
+        session=session,
+        telegram_targets=telegram_targets,
+    )
 
 
 @schedule_bp.route("/session/<int:id>/checkin", methods=["POST"])
@@ -158,6 +166,41 @@ def delete_task(id, task_id):
     return redirect(url_for("schedule.session_detail", id=id))
 
 
+@schedule_bp.route("/session/<int:id>/notify", methods=["POST"])
+@login_required
+def notify_session(id):
+    """Gửi thông báo thủ công tới các Telegram chat đã cấu hình."""
+    session = ScheduleSession.query.get_or_404(id)
+
+    configs = NotificationConfig.query.filter(
+        NotificationConfig.enabled == True,  # noqa: E712
+        NotificationConfig.chat_id != "",
+    ).all()
+    chat_ids = sorted({c.chat_id.strip() for c in configs if c.chat_id and c.chat_id.strip()})
+    if not chat_ids:
+        flash("Chưa có chat Telegram nào được bật trong cấu hình thông báo.", "warning")
+        return redirect(url_for("schedule.session_detail", id=id))
+
+    from ..services.telegram_service import send_telegram_message
+    from ..services.schedule_notifier import build_schedule_reminder_message
+
+    payload = build_schedule_reminder_message(session)
+
+    sent_ok = 0
+    for chat_id in chat_ids:
+        if send_telegram_message(chat_id, payload):
+            sent_ok += 1
+    sent_fail = len(chat_ids) - sent_ok
+
+    if sent_ok and sent_fail:
+        flash(f"Đã gửi thành công {sent_ok}/{len(chat_ids)} chat Telegram.", "warning")
+    elif sent_ok:
+        flash(f"Đã gửi thông báo tới {sent_ok} chat Telegram.", "success")
+    else:
+        flash("Gửi thất bại. Kiểm tra BOT_TOKEN hoặc Chat ID.", "error")
+    return redirect(url_for("schedule.session_detail", id=id))
+
+
 @schedule_bp.route("/notifications", methods=["GET", "POST"])
 @login_required
 def notifications():
@@ -178,9 +221,25 @@ def notifications():
         db.session.commit()
         flash("Đã lưu cấu hình.", "success")
         return redirect(url_for("schedule.notifications"))
-    if not configs:
-        db.session.add(NotificationConfig(config_type="schedule_reminder", chat_id="", minutes_before=15))
-        db.session.add(NotificationConfig(config_type="task_reminder", chat_id="", minutes_before=60))
+    required_defaults = {
+        "schedule_reminder": 15,
+        "task_reminder": 60,
+        "todo_daily_digest": 0,
+        "todo_deadline_reminder": 30,
+    }
+    existing_types = {c.config_type for c in configs}
+    created = False
+    for config_type, minutes in required_defaults.items():
+        if config_type not in existing_types:
+            db.session.add(
+                NotificationConfig(
+                    config_type=config_type,
+                    chat_id="",
+                    minutes_before=minutes,
+                )
+            )
+            created = True
+    if created:
         db.session.commit()
         configs = NotificationConfig.query.all()
     return render_template("schedule/notifications.html", configs=configs)

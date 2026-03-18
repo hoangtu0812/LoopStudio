@@ -17,6 +17,7 @@ def dashboard():
     """Trang tổng hợp các ứng dụng và dashboard cá nhân."""
     from datetime import date, datetime
     from ..models.schedule import ScheduleSession, Task
+    from ..services.todo_service import get_today_todo_timeline
     
     today = date.today()
     
@@ -42,12 +43,14 @@ def dashboard():
                 
     # Sort tasks by deadline
     tasks_due_today.sort(key=lambda t: t.deadline)
+    todo_timeline = get_today_todo_timeline()
 
     return render_template(
         "main/dashboard.html", 
         today_sessions=today_sessions,
         upcoming_sessions=upcoming_sessions,
-        tasks_due_today=tasks_due_today
+        tasks_due_today=tasks_due_today,
+        todo_timeline=todo_timeline,
     )
 
 @main_bp.route("/profile", methods=["GET", "POST"])

@@ -1,0 +1,107 @@
+{% extends "base.html" %}
+{% block title %}Dashboard quản trị - Loop Studio{% endblock %}
+
+{% block head %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+{% endblock %}
+
+{% block content %}
+<div class="space-y-6 lg:space-y-8">
+    <div class="flex flex-col md:flex-row md:items-end justify-between gap-4">
+        <div class="space-y-1">
+            <h1 class="text-3xl md:text-3xl font-extrabold tracking-tight">
+                <span class="bg-clip-text text-transparent bg-gradient-to-r from-gray-900 to-gray-600 dark:from-white dark:to-gray-300">
+                    Dashboard quản trị
+                </span>
+            </h1>
+            <p class="text-sm md:text-base text-gray-500 dark:text-gray-400 font-medium">
+                Theo dõi tỉ lệ tham gia lớp học bằng biểu đồ theo tuần và theo môn.
+            </p>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div class="bg-white/80 dark:bg-gray-800/80 rounded-2xl border border-gray-200/50 dark:border-gray-700/50 p-5">
+            <p class="text-sm text-gray-500 dark:text-gray-400">Tỉ lệ tham gia tổng</p>
+            <p class="mt-1 text-3xl font-bold text-gray-900 dark:text-white">{{ overall_rate }}%</p>
+        </div>
+        <div class="bg-white/80 dark:bg-gray-800/80 rounded-2xl border border-gray-200/50 dark:border-gray-700/50 p-5">
+            <p class="text-sm text-gray-500 dark:text-gray-400">Đã điểm danh</p>
+            <p class="mt-1 text-3xl font-bold text-emerald-600 dark:text-emerald-400">{{ checked_sessions }}</p>
+        </div>
+        <div class="bg-white/80 dark:bg-gray-800/80 rounded-2xl border border-gray-200/50 dark:border-gray-700/50 p-5">
+            <p class="text-sm text-gray-500 dark:text-gray-400">Tổng buổi học</p>
+            <p class="mt-1 text-3xl font-bold text-gray-900 dark:text-white">{{ total_sessions }}</p>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 xl:grid-cols-2 gap-6">
+        <div class="bg-white/80 dark:bg-gray-800/80 rounded-2xl border border-gray-200/50 dark:border-gray-700/50 p-5">
+            <h2 class="text-lg font-bold text-gray-900 dark:text-white">Xu hướng theo tuần (12 tuần gần nhất)</h2>
+            <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Tỉ lệ điểm danh trung bình theo từng tuần ISO.</p>
+            <div class="mt-4 h-80">
+                <canvas id="weeklyChart"></canvas>
+            </div>
+        </div>
+
+        <div class="bg-white/80 dark:bg-gray-800/80 rounded-2xl border border-gray-200/50 dark:border-gray-700/50 p-5">
+            <h2 class="text-lg font-bold text-gray-900 dark:text-white">Tỉ lệ theo môn học</h2>
+            <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Top môn học theo tỉ lệ tham gia.</p>
+            <div class="mt-4 h-80">
+                <canvas id="subjectChart"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+const weekLabels = {{ week_labels|tojson }};
+const weekRates = {{ week_rates|tojson }};
+const subjectLabels = {{ subject_labels|tojson }};
+const subjectRates = {{ subject_rates|tojson }};
+
+const commonOptions = {
+  responsive: true,
+  maintainAspectRatio: false,
+  scales: {
+    y: {
+      beginAtZero: true,
+      max: 100,
+      ticks: { callback: (value) => value + "%" }
+    }
+  },
+  plugins: { legend: { display: false } }
+};
+
+new Chart(document.getElementById("weeklyChart"), {
+  type: "line",
+  data: {
+    labels: weekLabels,
+    datasets: [{
+      label: "Tỉ lệ tham gia",
+      data: weekRates,
+      borderColor: "#10b981",
+      backgroundColor: "rgba(16,185,129,0.15)",
+      fill: true,
+      tension: 0.35,
+      pointRadius: 4
+    }]
+  },
+  options: commonOptions
+});
+
+new Chart(document.getElementById("subjectChart"), {
+  type: "bar",
+  data: {
+    labels: subjectLabels,
+    datasets: [{
+      label: "Tỉ lệ tham gia",
+      data: subjectRates,
+      backgroundColor: "#3b82f6",
+      borderRadius: 8
+    }]
+  },
+  options: commonOptions
+});
+</script>
+{% endblock %}

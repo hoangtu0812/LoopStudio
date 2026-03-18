@@ -21,6 +21,7 @@ SQLALCHEMY_DATABASE_URI = get_env(
     f"sqlite:///{_base.parent.parent / 'app.db'}",
 )
 SQLALCHEMY_TRACK_MODIFICATIONS = False
+TIMEZONE = get_env("TIMEZONE", "Asia/Ho_Chi_Minh")
 
 # Telegram (dùng để gửi thông báo từ web)
 BOT_TOKEN = get_env("BOT_TOKEN")

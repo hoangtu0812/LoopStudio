@@ -13,7 +13,7 @@
                 </span>
             </h1>
             <p class="text-sm md:text-base text-gray-500 dark:text-gray-400 font-medium max-w-2xl">
-                Hôm nay bạn có <strong class="text-brand-600 dark:text-brand-400 font-bold bg-brand-50 dark:bg-brand-900/30 px-1.5 py-0.5 rounded">{{ today_sessions|length }}</strong> ca học và <strong class="text-rose-600 dark:text-rose-400 font-bold bg-rose-50 dark:bg-rose-900/30 px-1.5 py-0.5 rounded">{{ tasks_due_today|length }}</strong> task cần hoàn thành.
+                Hôm nay bạn có <strong class="text-brand-600 dark:text-brand-400 font-bold bg-brand-50 dark:bg-brand-900/30 px-1.5 py-0.5 rounded">{{ today_sessions|length }}</strong> ca học, <strong class="text-rose-600 dark:text-rose-400 font-bold bg-rose-50 dark:bg-rose-900/30 px-1.5 py-0.5 rounded">{{ tasks_due_today|length }}</strong> task học cần hoàn thành và <strong class="text-indigo-600 dark:text-indigo-400 font-bold bg-indigo-50 dark:bg-indigo-900/30 px-1.5 py-0.5 rounded">{{ todo_timeline|length }}</strong> công việc cá nhân.
             </p>
         </div>
         
@@ -24,6 +24,10 @@
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
                 </svg>
                 Quản lý lịch
+            </a>
+            <a href="{{ url_for('todo.index') }}" 
+               class="inline-flex items-center justify-center px-4 py-2.5 text-sm font-semibold rounded-xl text-gray-700 bg-white dark:text-gray-200 dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 shadow-sm border border-gray-200 dark:border-gray-700 transition-all duration-200">
+                Công việc
             </a>
         </div>
     </div>
@@ -192,7 +196,7 @@
                             
                             <!-- Content Box -->
                             <div class="w-[calc(100%-3rem)] md:w-[calc(50%-2rem)] p-3 rounded-xl bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 shadow-sm transition-all duration-300 hover:shadow-md group-hover:-translate-y-1 flex items-start gap-3">
-                                <form action="{{ url_for('schedule.toggle_task', task_id=task.id) }}" method="POST" class="mt-0.5">
+                                <form action="{{ url_for('schedule.task_done', id=task.id) }}" method="POST" class="mt-0.5">
                                     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
                                     <button type="submit" class="h-4 w-4 rounded-full border border-gray-300 dark:border-gray-500 flex items-center justify-center hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors focus:outline-none focus:ring-2 focus:ring-brand-500">
                                     </button>
@@ -212,6 +216,39 @@
                         <div class="text-center py-6">
                             <p class="text-sm text-gray-500 dark:text-gray-400 italic">Không có công việc nào khẩn cấp.</p>
                         </div>
+                    {% endif %}
+                </div>
+            </section>
+
+            <section class="bg-white/80 dark:bg-gray-800/80 backdrop-blur-xl rounded-2xl shadow-[0_4px_24px_rgba(0,0,0,0.04)] dark:shadow-[0_4px_24px_rgba(0,0,0,0.2)] border border-gray-200/50 dark:border-gray-700/50 overflow-hidden relative">
+                <div class="p-5 lg:p-6 border-b border-gray-100 dark:border-gray-700/50">
+                    <h2 class="text-lg font-bold text-gray-900 dark:text-white flex items-center">
+                        <svg class="w-5 h-5 text-indigo-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"></path>
+                        </svg>
+                        Timeline công việc hôm nay
+                    </h2>
+                </div>
+                <div class="p-5 lg:p-6">
+                    {% if todo_timeline %}
+                    <div class="relative before:absolute before:inset-0 before:ml-4 before:h-full before:w-0.5 before:bg-gray-200 dark:before:bg-gray-700">
+                        {% for item in todo_timeline %}
+                        <div class="relative pl-10 mb-5 last:mb-0">
+                            <span class="absolute left-0 top-1.5 inline-flex h-8 w-8 items-center justify-center rounded-full {{ 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/40 dark:text-indigo-300' if item.kind == 'weekly' else 'bg-rose-100 text-rose-700 dark:bg-rose-900/40 dark:text-rose-300' }}">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                                </svg>
+                            </span>
+                            <p class="text-sm font-semibold text-gray-900 dark:text-white">{{ item.title }}</p>
+                            <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">{{ item.time_label }} · {{ 'Lặp tuần' if item.kind == 'weekly' else 'Deadline' }}</p>
+                            {% if item.note %}
+                            <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Ghi chú: {{ item.note }}</p>
+                            {% endif %}
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <p class="text-sm text-gray-500 dark:text-gray-400 italic">Hôm nay không có công việc cá nhân nào.</p>
                     {% endif %}
                 </div>
             </section>

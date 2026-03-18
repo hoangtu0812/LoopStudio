@@ -1,0 +1,125 @@
+{% extends "base.html" %}
+{% block title %}Quản lý công việc - Loop Studio{% endblock %}
+
+{% block content %}
+<div class="space-y-6 lg:space-y-8">
+    <div class="flex flex-col md:flex-row md:items-end justify-between gap-4">
+        <div>
+            <h1 class="text-3xl font-extrabold tracking-tight">
+                <span class="bg-clip-text text-transparent bg-gradient-to-r from-gray-900 to-gray-600 dark:from-white dark:to-gray-300">
+                    Quản lý công việc
+                </span>
+            </h1>
+            <p class="text-sm md:text-base text-gray-500 dark:text-gray-400 font-medium mt-1">
+                Tạo công việc lặp hằng tuần hoặc công việc theo deadline.
+            </p>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 xl:grid-cols-3 gap-6">
+        <div class="xl:col-span-1">
+            <div class="bg-white/80 dark:bg-gray-800/80 backdrop-blur-xl rounded-2xl border border-gray-200/50 dark:border-gray-700/50 p-6">
+                <h2 class="text-lg font-bold text-gray-900 dark:text-white">Tạo công việc mới</h2>
+                <form method="post" class="mt-4 space-y-4" x-data="{ taskType: 'weekly' }">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-900 dark:text-gray-200 mb-2">Tiêu đề</label>
+                        <input type="text" name="title" required
+                               class="block w-full rounded-xl border-0 py-2.5 px-4 text-gray-900 bg-white shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-brand-500 dark:bg-gray-900/50 dark:text-white dark:ring-gray-700 dark:focus:ring-brand-500 sm:text-sm">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-900 dark:text-gray-200 mb-2">Ghi chú (tùy chọn)</label>
+                        <textarea name="note" rows="2"
+                                  class="block w-full rounded-xl border-0 py-2.5 px-4 text-gray-900 bg-white shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-brand-500 dark:bg-gray-900/50 dark:text-white dark:ring-gray-700 dark:focus:ring-brand-500 sm:text-sm"></textarea>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-900 dark:text-gray-200 mb-2">Loại công việc</label>
+                        <select name="task_type" x-model="taskType"
+                                class="block w-full rounded-xl border-0 py-2.5 px-4 text-gray-900 bg-white shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-brand-500 dark:bg-gray-900/50 dark:text-white dark:ring-gray-700 dark:focus:ring-brand-500 sm:text-sm">
+                            <option value="weekly">Lặp theo tuần</option>
+                            <option value="deadline">Theo deadline</option>
+                        </select>
+                    </div>
+
+                    <div x-show="taskType === 'weekly'">
+                        <label class="block text-sm font-semibold text-gray-900 dark:text-gray-200 mb-2">Thứ</label>
+                        <select name="weekday"
+                                class="block w-full rounded-xl border-0 py-2.5 px-4 text-gray-900 bg-white shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-brand-500 dark:bg-gray-900/50 dark:text-white dark:ring-gray-700 dark:focus:ring-brand-500 sm:text-sm">
+                            {% for day_value, day_label in weekday_options %}
+                            <option value="{{ day_value }}">{{ day_label }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div x-show="taskType === 'deadline'" x-cloak class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-900 dark:text-gray-200 mb-2">Từ ngày</label>
+                            <input type="datetime-local" name="start_at"
+                                   class="block w-full rounded-xl border-0 py-2.5 px-4 text-gray-900 bg-white shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-brand-500 dark:bg-gray-900/50 dark:text-white dark:ring-gray-700 dark:focus:ring-brand-500 sm:text-sm">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-900 dark:text-gray-200 mb-2">Đến ngày (deadline)</label>
+                            <input type="datetime-local" name="deadline"
+                                   class="block w-full rounded-xl border-0 py-2.5 px-4 text-gray-900 bg-white shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-brand-500 dark:bg-gray-900/50 dark:text-white dark:ring-gray-700 dark:focus:ring-brand-500 sm:text-sm">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-900 dark:text-gray-200 mb-2">Nhắc trước (phút)</label>
+                            <input type="number" min="1" name="reminder_minutes_before" value="30"
+                                   class="block w-full rounded-xl border-0 py-2.5 px-4 text-gray-900 bg-white shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-brand-500 dark:bg-gray-900/50 dark:text-white dark:ring-gray-700 dark:focus:ring-brand-500 sm:text-sm">
+                        </div>
+                    </div>
+
+                    <button type="submit" class="w-full inline-flex items-center justify-center rounded-xl bg-gradient-to-r from-brand-500 to-brand-600 dark:from-brand-600 dark:to-brand-700 px-4 py-2.5 text-sm font-semibold text-white shadow-md shadow-brand-500/20 hover:from-brand-400 hover:to-brand-500 transition-all">
+                        Lưu công việc
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <div class="xl:col-span-2">
+            <div class="bg-white/80 dark:bg-gray-800/80 backdrop-blur-xl rounded-2xl border border-gray-200/50 dark:border-gray-700/50 overflow-hidden">
+                <div class="p-5 border-b border-gray-100 dark:border-gray-700/50">
+                    <h2 class="text-lg font-bold text-gray-900 dark:text-white">Danh sách công việc</h2>
+                </div>
+                <ul class="divide-y divide-gray-100 dark:divide-gray-700/50">
+                    {% for task in tasks %}
+                    <li class="p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 {{ '' if task.is_active else 'opacity-60' }}">
+                        <div class="min-w-0">
+                            <p class="text-sm font-semibold text-gray-900 dark:text-white break-words">{{ task.title }}</p>
+                            <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                                {% if task.task_type == 'weekly' %}
+                                    🔁 Lặp: {{ weekday_map.get(task.weekday, 'N/A') }}
+                                {% else %}
+                                    ⏰ Từ {{ task.start_at.strftime('%H:%M %d/%m/%Y') if task.start_at else 'N/A' }} đến {{ task.deadline.strftime('%H:%M %d/%m/%Y') if task.deadline else 'N/A' }} (nhắc trước {{ task.reminder_minutes_before }} phút)
+                                {% endif %}
+                            </p>
+                            {% if task.note %}
+                            <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Ghi chú: {{ task.note }}</p>
+                            {% endif %}
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <form method="post" action="{{ url_for('todo.toggle', id=task.id) }}">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                                <button type="submit" class="px-3 py-2 rounded-lg text-xs font-semibold {{ 'bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300' if task.is_active else 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300' }}">
+                                    {{ 'Tạm dừng' if task.is_active else 'Kích hoạt' }}
+                                </button>
+                            </form>
+                            <form method="post" action="{{ url_for('todo.delete', id=task.id) }}" onsubmit="return confirm('Xóa công việc này?');">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                                <button type="submit" class="px-3 py-2 rounded-lg text-xs font-semibold bg-rose-100 text-rose-700 dark:bg-rose-900/40 dark:text-rose-300">
+                                    Xóa
+                                </button>
+                            </form>
+                        </div>
+                    </li>
+                    {% else %}
+                    <li class="p-10 text-center text-sm text-gray-500 dark:text-gray-400">
+                        Chưa có công việc nào. Hãy tạo công việc đầu tiên ở khung bên trái.
+                    </li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

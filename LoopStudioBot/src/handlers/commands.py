@@ -18,6 +18,7 @@ COMMANDS_HELP = """
 /help - Xem danh sách lệnh và hướng dẫn
 /netstat - Báo cáo hệ thống: Speedtest, CPU, RAM, Disk, IP Public
 /otp - Lấy mã xác thực đăng ký tài khoản (VD: /otp admin)
+/todo - Lấy danh sách công việc cần làm hôm nay
 
 Bot **LoopStudioBot** - Giám sát server tự động.
 """
@@ -111,6 +112,34 @@ async def cmd_otp(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         await sent.edit_text(f"❌ Lỗi kết nối đến Web App: {str(e)}")
 
 
+async def cmd_todo(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    """Xử lý /todo - Lấy danh sách công việc hôm nay từ Web App."""
+    _log_access(update, "/todo")
+    sent = await update.message.reply_text("⏳ Đang lấy danh sách công việc hôm nay...")
+
+    from ..utils.bot_logger import WEB_APP_URL
+    import requests
+
+    if not WEB_APP_URL:
+        await sent.edit_text("❌ Bot chưa cấu hình liên kết Web App.")
+        return
+
+    try:
+        r = requests.get(
+            f"{WEB_APP_URL.rstrip('/')}/api/bot/todo",
+            timeout=5,
+        )
+        if r.status_code == 200:
+            data = r.json()
+            text = data.get("text") or "Không có dữ liệu công việc hôm nay."
+            await sent.edit_text(text)
+        else:
+            await sent.edit_text("❌ Không thể lấy dữ liệu todo từ Web App.")
+    except Exception as e:
+        logger.exception("TODO error: %s", str(e))
+        await sent.edit_text(f"❌ Lỗi kết nối đến Web App: {str(e)}")
+
+
 def register_handlers(application) -> None:
     """Đăng ký tất cả handlers vào application."""
     from telegram.ext import CommandHandler
@@ -119,4 +148,5 @@ def register_handlers(application) -> None:
     application.add_handler(CommandHandler("help", cmd_help))
     application.add_handler(CommandHandler("netstat", cmd_netstat))
     application.add_handler(CommandHandler("otp", cmd_otp))
-    logger.info("Handlers registered: start, help, netstat, otp")
+    application.add_handler(CommandHandler("todo", cmd_todo))
+    logger.info("Handlers registered: start, help, netstat, otp, todo")

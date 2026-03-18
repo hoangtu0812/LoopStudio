@@ -3,6 +3,16 @@ from datetime import datetime, timedelta
 
 from apscheduler.schedulers.background import BackgroundScheduler
 
+from ..config import TIMEZONE
+
+
+def build_schedule_reminder_message(session) -> str:
+    """Sinh nội dung thông báo nhắc buổi học theo định dạng chuẩn."""
+    return (
+        f"⏰ Nhắc nhở: {session.schedule.name} - "
+        f"{session.session_date.strftime('%d/%m/%Y')} lúc {session.start_time.strftime('%H:%M')}"
+    )
+
 
 def _check_schedule_reminders(app):
     """Kiểm tra các buổi học sắp diễn ra và gửi thông báo."""
@@ -25,7 +35,7 @@ def _check_schedule_reminders(app):
         for s in sessions:
             session_dt = datetime.combine(s.session_date, s.start_time)
             if lo <= session_dt <= hi:
-                msg = f"⏰ Nhắc nhở: {s.schedule.name} - {s.session_date} lúc {s.start_time}"
+                msg = build_schedule_reminder_message(s)
                 if send_telegram_message(cfg.chat_id, msg):
                     s.reminder_sent = True
         db.session.commit()
@@ -57,9 +67,93 @@ def _check_task_reminders(app):
         db.session.commit()
 
 
+def _get_todo_chat_ids():
+    from ..models import NotificationConfig
+
+    configs = NotificationConfig.query.filter(
+        NotificationConfig.enabled == True,  # noqa: E712
+        NotificationConfig.chat_id != "",
+    ).all()
+
+    preferred = {"todo_daily_digest", "todo_deadline_reminder"}
+    preferred_chat_ids = {
+        c.chat_id.strip()
+        for c in configs
+        if c.config_type in preferred and c.chat_id and c.chat_id.strip()
+    }
+    if preferred_chat_ids:
+        return sorted(preferred_chat_ids)
+
+    fallback_chat_ids = {
+        c.chat_id.strip()
+        for c in configs
+        if c.config_type == "schedule_reminder" and c.chat_id and c.chat_id.strip()
+    }
+    return sorted(fallback_chat_ids)
+
+
+def _send_daily_todo_digest(app):
+    """Mỗi sáng gửi danh sách việc cần làm trong ngày."""
+    with app.app_context():
+        from ..services.telegram_service import send_telegram_message
+        from ..services.todo_service import build_today_todo_message
+
+        chat_ids = _get_todo_chat_ids()
+        if not chat_ids:
+            return
+
+        msg = build_today_todo_message()
+        for chat_id in chat_ids:
+            send_telegram_message(chat_id, msg)
+
+
+def _check_todo_deadline_reminders(app):
+    """Nhắc trước deadline cho todo loại deadline."""
+    with app.app_context():
+        from ..app import db
+        from ..models import TodoTask
+        from ..services.telegram_service import send_telegram_message
+
+        chat_ids = _get_todo_chat_ids()
+        if not chat_ids:
+            return
+
+        now = datetime.now()
+        tasks = TodoTask.query.filter(
+            TodoTask.task_type == "deadline",
+            TodoTask.is_active == True,  # noqa: E712
+            TodoTask.start_at != None,  # noqa: E711
+            TodoTask.deadline != None,  # noqa: E711
+            TodoTask.deadline_reminder_sent == False,  # noqa: E712
+        ).all()
+
+        for task in tasks:
+            remind_at = task.deadline - timedelta(minutes=task.reminder_minutes_before or 30)
+            active_from = max(remind_at, task.start_at)
+            if active_from <= now <= task.deadline:
+                msg = (
+                    "⏰ Nhắc việc theo deadline\n"
+                    f"Công việc: {task.title}\n"
+                    f"Từ: {task.start_at.strftime('%H:%M %d/%m/%Y')}\n"
+                    f"Deadline: {task.deadline.strftime('%H:%M %d/%m/%Y')}"
+                )
+                if task.note:
+                    msg += f"\nGhi chú: {task.note}"
+
+                sent_ok = False
+                for chat_id in chat_ids:
+                    if send_telegram_message(chat_id, msg):
+                        sent_ok = True
+                if sent_ok:
+                    task.deadline_reminder_sent = True
+        db.session.commit()
+
+
 def start_scheduler(app):
     """Khởi động scheduler trong Flask app context."""
-    scheduler = BackgroundScheduler()
+    scheduler = BackgroundScheduler(timezone=TIMEZONE)
     scheduler.add_job(lambda: _check_schedule_reminders(app), "interval", minutes=1)
     scheduler.add_job(lambda: _check_task_reminders(app), "interval", minutes=1)
+    scheduler.add_job(lambda: _check_todo_deadline_reminders(app), "interval", minutes=1)
+    scheduler.add_job(lambda: _send_daily_todo_digest(app), "cron", hour=7, minute=30)
     scheduler.start()
