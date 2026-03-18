@@ -48,26 +48,34 @@ def build_today_todo_message(now: datetime | None = None) -> str:
     now = now or datetime.now()
     weekly_tasks, deadline_tasks = get_today_todos(now)
 
-    lines = [f"🗂️ TODO HÔM NAY ({now.strftime('%d/%m/%Y')})"]
+    lines = [
+        "━━━━━━━━━━━━━━━━━━",
+        "🌤️ BẢNG TODO HÔM NAY",
+        "━━━━━━━━━━━━━━━━━━",
+        f"📅 Ngày: {now.strftime('%d/%m/%Y')}",
+    ]
     if not weekly_tasks and not deadline_tasks:
-        lines.append("✅ Không có công việc nào cần làm hôm nay.")
+        lines.append("\n✅ Tuyệt vời! Hôm nay không có công việc nào cần xử lý.")
         return "\n".join(lines)
 
     if weekly_tasks:
         lines.append("\n🔁 Công việc lặp theo tuần:")
         for idx, task in enumerate(weekly_tasks, start=1):
-            lines.append(f"{idx}. {task.title}")
+            lines.append(f"{idx:02d}. {task.title}")
             if task.note:
-                lines.append(f"   - Ghi chú: {task.note}")
+                lines.append(f"    📝 {task.note}")
 
     if deadline_tasks:
-        lines.append("\n⏰ Công việc theo deadline hôm nay:")
+        lines.append("\n⏰ Công việc theo deadline:")
         for idx, task in enumerate(deadline_tasks, start=1):
             from_str = task.start_at.strftime("%d/%m")
             to_str = task.deadline.strftime("%d/%m %H:%M")
-            lines.append(f"{idx}. {task.title} ({from_str} -> {to_str})")
+            lines.append(f"{idx:02d}. {task.title}")
+            lines.append(f"    ⏳ {from_str} -> {to_str}")
             if task.note:
-                lines.append(f"   - Ghi chú: {task.note}")
+                lines.append(f"    📝 {task.note}")
+
+    lines.append("\n💡 Mẹo: Ưu tiên xử lý các mục deadline trước.")
 
     return "\n".join(lines)
 

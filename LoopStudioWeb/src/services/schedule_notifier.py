@@ -9,8 +9,13 @@ from ..config import TIMEZONE
 def build_schedule_reminder_message(session) -> str:
     """Sinh nội dung thông báo nhắc buổi học theo định dạng chuẩn."""
     return (
-        f"⏰ Nhắc nhở: {session.schedule.name} - "
-        f"{session.session_date.strftime('%d/%m/%Y')} lúc {session.start_time.strftime('%H:%M')}"
+        "━━━━━━━━━━━━━━━━━━\n"
+        "📚 NHẮC LỊCH HỌC\n"
+        "━━━━━━━━━━━━━━━━━━\n"
+        f"• Môn học: {session.schedule.name}\n"
+        f"• Ngày: {session.session_date.strftime('%d/%m/%Y')}\n"
+        f"• Khung giờ: {session.start_time.strftime('%H:%M')} - {session.end_time.strftime('%H:%M')}\n"
+        "✅ Chuẩn bị vào học đúng giờ nhé!"
     )
 
 
@@ -62,7 +67,15 @@ def _check_task_reminders(app):
             Task.deadline <= target,
         ).all()
         for t in tasks:
-            msg = f"📋 Task: {t.title} - Deadline: {t.deadline}"
+            deadline_str = t.deadline.strftime("%H:%M %d/%m/%Y")
+            msg = (
+                "━━━━━━━━━━━━━━━━━━\n"
+                "📌 NHẮC TASK BUỔI HỌC\n"
+                "━━━━━━━━━━━━━━━━━━\n"
+                f"• Công việc: {t.title}\n"
+                f"• Deadline: {deadline_str}\n"
+                "⚠️ Đừng quên hoàn thành trước hạn!"
+            )
             send_telegram_message(cfg.chat_id, msg)
         db.session.commit()
 
@@ -132,13 +145,17 @@ def _check_todo_deadline_reminders(app):
             active_from = max(remind_at, task.start_at)
             if active_from <= now <= task.deadline:
                 msg = (
-                    "⏰ Nhắc việc theo deadline\n"
-                    f"Công việc: {task.title}\n"
-                    f"Từ: {task.start_at.strftime('%H:%M %d/%m/%Y')}\n"
-                    f"Deadline: {task.deadline.strftime('%H:%M %d/%m/%Y')}"
+                    "━━━━━━━━━━━━━━━━━━\n"
+                    "🗂️ NHẮC TODO DEADLINE\n"
+                    "━━━━━━━━━━━━━━━━━━\n"
+                    f"• Công việc: {task.title}\n"
+                    f"• Bắt đầu: {task.start_at.strftime('%H:%M %d/%m/%Y')}\n"
+                    f"• Kết thúc: {task.deadline.strftime('%H:%M %d/%m/%Y')}\n"
+                    f"• Nhắc trước: {task.reminder_minutes_before or 30} phút\n"
+                    "🚀 Đây là thời điểm tốt để bắt đầu ngay!"
                 )
                 if task.note:
-                    msg += f"\nGhi chú: {task.note}"
+                    msg += f"\n📝 Ghi chú: {task.note}"
 
                 sent_ok = False
                 for chat_id in chat_ids:
