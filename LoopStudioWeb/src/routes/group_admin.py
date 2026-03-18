@@ -11,6 +11,8 @@ APP_DEFINITIONS = [
     ("calendar", "Calendar chung"),
     ("schedule", "Thời khóa biểu"),
     ("todo", "Công việc"),
+    ("cafe", "Quản trị quán cà phê"),
+    ("uptime", "Uptime Monitor"),
     ("dashboard", "Dashboard quản trị"),
     ("bot_admin", "Bot Admin"),
 ]

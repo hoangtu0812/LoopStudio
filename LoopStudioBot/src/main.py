@@ -2,6 +2,7 @@
 LoopStudioBot - Điểm chạy ứng dụng.
 Khởi động bot, đăng ký handlers, và scheduler.
 """
+from telegram.error import Conflict
 from telegram.ext import Application
 
 from .config import BOT_TOKEN
@@ -29,7 +30,13 @@ def main() -> None:
 
     # Chạy bot
     logger.info("LoopStudioBot đang khởi động...")
-    application.run_polling(allowed_updates=["message"])
+    try:
+        application.run_polling(allowed_updates=["message"])
+    except Conflict:
+        logger.error(
+            "Bot conflict: phát hiện instance khác đang polling cùng BOT_TOKEN. "
+            "Hãy đảm bảo chỉ có một bot instance đang chạy."
+        )
 
 
 if __name__ == "__main__":

@@ -19,6 +19,7 @@ COMMANDS_HELP = """
 /netstat - Báo cáo hệ thống: Speedtest, CPU, RAM, Disk, IP Public
 /otp - Lấy mã xác thực đăng ký tài khoản (VD: /otp admin)
 /todo - Lấy danh sách công việc cần làm hôm nay
+/uptime - Kiểm tra trạng thái up/down của các website monitor
 
 Bot **LoopStudioBot** - Giám sát server tự động.
 """
@@ -140,6 +141,34 @@ async def cmd_todo(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         await sent.edit_text(f"❌ Lỗi kết nối đến Web App: {str(e)}")
 
 
+async def cmd_uptime(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    """Xử lý /uptime - Lấy trạng thái uptime website từ Web App."""
+    _log_access(update, "/uptime")
+    sent = await update.message.reply_text("⏳ Đang lấy trạng thái uptime...")
+
+    from ..utils.bot_logger import WEB_APP_URL
+    import requests
+
+    if not WEB_APP_URL:
+        await sent.edit_text("❌ Bot chưa cấu hình liên kết Web App.")
+        return
+
+    try:
+        r = requests.get(
+            f"{WEB_APP_URL.rstrip('/')}/api/bot/uptime",
+            timeout=6,
+        )
+        if r.status_code == 200:
+            data = r.json()
+            text = data.get("text") or "Không có dữ liệu uptime."
+            await sent.edit_text(text)
+        else:
+            await sent.edit_text("❌ Không thể lấy dữ liệu uptime từ Web App.")
+    except Exception as e:
+        logger.exception("UPTIME error: %s", str(e))
+        await sent.edit_text(f"❌ Lỗi kết nối đến Web App: {str(e)}")
+
+
 def register_handlers(application) -> None:
     """Đăng ký tất cả handlers vào application."""
     from telegram.ext import CommandHandler
@@ -149,4 +178,5 @@ def register_handlers(application) -> None:
     application.add_handler(CommandHandler("netstat", cmd_netstat))
     application.add_handler(CommandHandler("otp", cmd_otp))
     application.add_handler(CommandHandler("todo", cmd_todo))
-    logger.info("Handlers registered: start, help, netstat, otp, todo")
+    application.add_handler(CommandHandler("uptime", cmd_uptime))
+    logger.info("Handlers registered: start, help, netstat, otp, todo, uptime")

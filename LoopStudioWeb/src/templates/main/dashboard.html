@@ -19,10 +19,16 @@
         <div class="flex-shrink-0 flex gap-3">
             <a href="{{ url_for('calendar.index') }}"
                class="inline-flex items-center justify-center px-4 py-2.5 text-sm font-semibold rounded-xl text-white bg-gradient-to-r from-brand-500 to-brand-600 hover:from-brand-400 hover:to-brand-500 shadow-md transition-all duration-200">
+                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                </svg>
                 Calendar chung
             </a>
             <a href="{{ url_for('todo.index') }}"
                class="inline-flex items-center justify-center px-4 py-2.5 text-sm font-semibold rounded-xl text-gray-700 bg-white dark:text-gray-200 dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 shadow-sm border border-gray-200 dark:border-gray-700 transition-all duration-200">
+                <svg class="w-4 h-4 mr-2 text-indigo-500 dark:text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"></path>
+                </svg>
                 Công việc
             </a>
         </div>
@@ -30,19 +36,39 @@
 
     <div class="grid grid-cols-2 md:grid-cols-4 gap-4 lg:gap-6">
         <div class="bg-white/80 dark:bg-gray-800/80 backdrop-blur-xl rounded-2xl p-4 lg:p-5 border border-white/50 dark:border-gray-700/50">
-            <h3 class="text-gray-500 dark:text-gray-400 text-sm font-medium">Sự kiện hôm nay</h3>
+            <h3 class="flex items-center gap-2 text-gray-500 dark:text-gray-400 text-sm font-medium">
+                <svg class="w-4 h-4 text-emerald-500 dark:text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                </svg>
+                Sự kiện hôm nay
+            </h3>
             <p class="text-2xl lg:text-3xl font-bold text-gray-900 dark:text-white mt-1">{{ events_today|length }}</p>
         </div>
         <div class="bg-white/80 dark:bg-gray-800/80 backdrop-blur-xl rounded-2xl p-4 lg:p-5 border border-white/50 dark:border-gray-700/50">
-            <h3 class="text-gray-500 dark:text-gray-400 text-sm font-medium">Việc cần xử lý hôm nay</h3>
+            <h3 class="flex items-center gap-2 text-gray-500 dark:text-gray-400 text-sm font-medium">
+                <svg class="w-4 h-4 text-amber-500 dark:text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l2.5 2.5M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                </svg>
+                Việc cần xử lý hôm nay
+            </h3>
             <p class="text-2xl lg:text-3xl font-bold text-gray-900 dark:text-white mt-1">{{ tasks_due_today|length }}</p>
         </div>
         <div class="bg-white/80 dark:bg-gray-800/80 backdrop-blur-xl rounded-2xl p-4 lg:p-5 border border-white/50 dark:border-gray-700/50">
-            <h3 class="text-gray-500 dark:text-gray-400 text-sm font-medium">Sắp tới 7 ngày</h3>
+            <h3 class="flex items-center gap-2 text-gray-500 dark:text-gray-400 text-sm font-medium">
+                <svg class="w-4 h-4 text-blue-500 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                </svg>
+                Sắp tới 7 ngày
+            </h3>
             <p class="text-2xl lg:text-3xl font-bold text-gray-900 dark:text-white mt-1">{{ upcoming_events|length }}</p>
         </div>
         <div class="bg-white/80 dark:bg-gray-800/80 backdrop-blur-xl rounded-2xl p-4 lg:p-5 border border-white/50 dark:border-gray-700/50">
-            <h3 class="text-gray-500 dark:text-gray-400 text-sm font-medium">Timeline công việc</h3>
+            <h3 class="flex items-center gap-2 text-gray-500 dark:text-gray-400 text-sm font-medium">
+                <svg class="w-4 h-4 text-indigo-500 dark:text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3v18h18M7 13l3-3 3 2 4-5"></path>
+                </svg>
+                Timeline công việc
+            </h3>
             <p class="text-2xl lg:text-3xl font-bold text-gray-900 dark:text-white mt-1">{{ todo_timeline|length }}</p>
         </div>
     </div>
@@ -51,7 +77,12 @@
         <div class="lg:col-span-2 space-y-6">
             <section class="bg-white/80 dark:bg-gray-800/80 backdrop-blur-xl rounded-2xl border border-gray-200/50 dark:border-gray-700/50 overflow-hidden">
                 <div class="p-5 lg:p-6 border-b border-gray-100 dark:border-gray-700/50">
-                    <h2 class="text-lg font-bold text-gray-900 dark:text-white">Sự kiện hôm nay</h2>
+                    <h2 class="text-lg font-bold text-gray-900 dark:text-white flex items-center gap-2">
+                        <svg class="w-5 h-5 text-emerald-500 dark:text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                        </svg>
+                        Sự kiện hôm nay
+                    </h2>
                 </div>
                 <div class="p-2 lg:p-4">
                     {% if events_today %}
@@ -83,7 +114,12 @@
         <div class="space-y-6">
             <section class="bg-white/80 dark:bg-gray-800/80 backdrop-blur-xl rounded-2xl border border-gray-200/50 dark:border-gray-700/50 overflow-hidden">
                 <div class="p-5 lg:p-6 border-b border-gray-100 dark:border-gray-700/50">
-                    <h2 class="text-lg font-bold text-gray-900 dark:text-white">Timeline công việc hôm nay</h2>
+                    <h2 class="text-lg font-bold text-gray-900 dark:text-white flex items-center gap-2">
+                        <svg class="w-5 h-5 text-indigo-500 dark:text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3v18h18M7 13l3-3 3 2 4-5"></path>
+                        </svg>
+                        Timeline công việc hôm nay
+                    </h2>
                 </div>
                 <div class="p-5 lg:p-6">
                     {% if todo_timeline %}
@@ -109,7 +145,12 @@
 
             <section class="bg-white/80 dark:bg-gray-800/80 backdrop-blur-xl rounded-2xl border border-gray-200/50 dark:border-gray-700/50">
                 <div class="p-5 lg:p-6 border-b border-gray-100 dark:border-gray-700/50">
-                    <h2 class="text-lg font-bold text-gray-900 dark:text-white">Sự kiện sắp tới</h2>
+                    <h2 class="text-lg font-bold text-gray-900 dark:text-white flex items-center gap-2">
+                        <svg class="w-5 h-5 text-blue-500 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                        Sự kiện sắp tới
+                    </h2>
                 </div>
                 <div class="p-2 lg:p-4">
                     {% if upcoming_events %}

@@ -1,0 +1,124 @@
+{% extends "base.html" %}
+{% block title %}Dashboard doanh thu cafe{% endblock %}
+
+{% block head %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+{% endblock %}
+
+{% block content %}
+<div class="space-y-6 lg:space-y-8">
+    <div class="flex flex-col md:flex-row md:items-end justify-between gap-4">
+        <div>
+            <h1 class="text-3xl font-extrabold tracking-tight">
+                <span class="bg-clip-text text-transparent bg-gradient-to-r from-gray-900 to-gray-600 dark:from-white dark:to-gray-300">
+                    Dashboard doanh thu cafe
+                </span>
+            </h1>
+            <p class="text-sm md:text-base text-gray-500 dark:text-gray-400 font-medium mt-1">
+                Theo dõi doanh thu theo ngày, tháng và theo món bán ra.
+            </p>
+        </div>
+        <div class="flex gap-2 flex-wrap">
+            <a href="{{ url_for('cafe_order.index') }}" class="inline-flex items-center px-3 py-2 text-xs font-semibold rounded-lg text-white bg-brand-600 hover:bg-brand-500">Trang order</a>
+            <a href="{{ url_for('cafe_admin.menu') }}" class="inline-flex items-center px-3 py-2 text-xs font-semibold rounded-lg text-gray-700 bg-white border border-gray-200 hover:bg-gray-50 dark:text-gray-200 dark:bg-gray-800 dark:border-gray-700 dark:hover:bg-gray-700">Cấu hình món</a>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div class="bg-white/80 dark:bg-gray-800/80 rounded-2xl border border-gray-200/50 dark:border-gray-700/50 p-5">
+            <p class="text-sm text-gray-500 dark:text-gray-400">Doanh thu hôm nay</p>
+            <p class="mt-1 text-2xl font-bold text-emerald-600 dark:text-emerald-400">{{ '{:,.0f}'.format(today_revenue) }} đ</p>
+        </div>
+        <div class="bg-white/80 dark:bg-gray-800/80 rounded-2xl border border-gray-200/50 dark:border-gray-700/50 p-5">
+            <p class="text-sm text-gray-500 dark:text-gray-400">Doanh thu tháng này</p>
+            <p class="mt-1 text-2xl font-bold text-emerald-600 dark:text-emerald-400">{{ '{:,.0f}'.format(month_revenue) }} đ</p>
+        </div>
+        <div class="bg-white/80 dark:bg-gray-800/80 rounded-2xl border border-gray-200/50 dark:border-gray-700/50 p-5">
+            <p class="text-sm text-gray-500 dark:text-gray-400">Bàn đang mở</p>
+            <p class="mt-1 text-2xl font-bold text-gray-900 dark:text-white">{{ open_tables }}</p>
+        </div>
+        <div class="bg-white/80 dark:bg-gray-800/80 rounded-2xl border border-gray-200/50 dark:border-gray-700/50 p-5">
+            <p class="text-sm text-gray-500 dark:text-gray-400">Đơn đã thanh toán</p>
+            <p class="mt-1 text-2xl font-bold text-gray-900 dark:text-white">{{ paid_orders_count }}</p>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 xl:grid-cols-2 gap-6">
+        <div class="bg-white/80 dark:bg-gray-800/80 rounded-2xl border border-gray-200/50 dark:border-gray-700/50 p-5">
+            <h2 class="text-lg font-bold text-gray-900 dark:text-white">Doanh thu 14 ngày gần nhất</h2>
+            <div class="mt-4 h-80"><canvas id="dailyRevenueChart"></canvas></div>
+        </div>
+        <div class="bg-white/80 dark:bg-gray-800/80 rounded-2xl border border-gray-200/50 dark:border-gray-700/50 p-5">
+            <h2 class="text-lg font-bold text-gray-900 dark:text-white">Doanh thu theo tháng</h2>
+            <div class="mt-4 h-80"><canvas id="monthlyRevenueChart"></canvas></div>
+        </div>
+    </div>
+
+    <div class="bg-white/80 dark:bg-gray-800/80 rounded-2xl border border-gray-200/50 dark:border-gray-700/50 p-5">
+        <h2 class="text-lg font-bold text-gray-900 dark:text-white">Top món theo doanh thu</h2>
+        <div class="mt-4 h-80"><canvas id="topItemsChart"></canvas></div>
+    </div>
+</div>
+
+<script>
+const dailyLabels = {{ daily_labels|tojson }};
+const dailyRevenue = {{ daily_revenue|tojson }};
+const monthLabels = {{ month_labels|tojson }};
+const monthRevenue = {{ month_revenue_series|tojson }};
+const topItemLabels = {{ top_item_labels|tojson }};
+const topItemRevenue = {{ top_item_revenue|tojson }};
+
+const formatCurrency = (value) => new Intl.NumberFormat("vi-VN").format(value) + " đ";
+
+new Chart(document.getElementById("dailyRevenueChart"), {
+  type: "line",
+  data: {
+    labels: dailyLabels,
+    datasets: [{
+      label: "Doanh thu",
+      data: dailyRevenue,
+      borderColor: "#10b981",
+      backgroundColor: "rgba(16,185,129,0.15)",
+      fill: true,
+      tension: 0.35,
+      pointRadius: 3
+    }]
+  },
+  options: {
+    responsive: true,
+    maintainAspectRatio: false,
+    scales: { y: { beginAtZero: true } },
+    plugins: { tooltip: { callbacks: { label: (ctx) => formatCurrency(ctx.raw) } } }
+  }
+});
+
+new Chart(document.getElementById("monthlyRevenueChart"), {
+  type: "bar",
+  data: {
+    labels: monthLabels,
+    datasets: [{ label: "Doanh thu", data: monthRevenue, backgroundColor: "#3b82f6", borderRadius: 8 }]
+  },
+  options: {
+    responsive: true,
+    maintainAspectRatio: false,
+    scales: { y: { beginAtZero: true } },
+    plugins: { tooltip: { callbacks: { label: (ctx) => formatCurrency(ctx.raw) } } }
+  }
+});
+
+new Chart(document.getElementById("topItemsChart"), {
+  type: "bar",
+  data: {
+    labels: topItemLabels,
+    datasets: [{ label: "Doanh thu", data: topItemRevenue, backgroundColor: "#f59e0b", borderRadius: 8 }]
+  },
+  options: {
+    responsive: true,
+    maintainAspectRatio: false,
+    indexAxis: "y",
+    scales: { x: { beginAtZero: true } },
+    plugins: { tooltip: { callbacks: { label: (ctx) => formatCurrency(ctx.raw) } } }
+  }
+});
+</script>
+{% endblock %}

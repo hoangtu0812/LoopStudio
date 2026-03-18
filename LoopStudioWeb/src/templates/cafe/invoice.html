@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+{% block title %}Hóa đơn #{{ order.id }}{% endblock %}
+
+{% block content %}
+<div class="max-w-3xl mx-auto space-y-6">
+    <div class="flex items-center justify-between">
+        <a href="{{ url_for('cafe_order.index') }}" class="text-sm font-medium text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300">← Quay lại trang order</a>
+        <button onclick="window.print()" class="inline-flex items-center px-3 py-2 text-xs font-semibold rounded-lg text-white bg-brand-600 hover:bg-brand-500">In hóa đơn</button>
+    </div>
+
+    <section class="bg-white dark:bg-white text-gray-900 rounded-2xl border border-gray-200 p-6 print:shadow-none print:border-0">
+        <div class="text-center">
+            <h1 class="text-2xl font-extrabold">LOOP STUDIO CAFE</h1>
+            <p class="text-sm text-gray-600">Hóa đơn thanh toán</p>
+        </div>
+
+        <div class="mt-6 grid grid-cols-2 gap-3 text-sm">
+            <p><strong>Mã đơn:</strong> #{{ order.id }}</p>
+            <p><strong>Bàn:</strong> {{ order.table_name }}</p>
+            <p><strong>Trạng thái:</strong> {{ order.status }}</p>
+            <p><strong>Thanh toán:</strong> {{ "Tiền mặt" if order.payment_method == "cash" else "Chuyển khoản" }}</p>
+            <p class="col-span-2"><strong>Thời gian:</strong> {{ order.paid_at.strftime('%H:%M %d/%m/%Y') if order.paid_at else '-' }}</p>
+        </div>
+
+        <table class="w-full mt-4 border-t border-b border-gray-200">
+            <thead>
+                <tr class="text-left text-xs uppercase text-gray-500">
+                    <th class="py-2">Món</th>
+                    <th class="py-2 text-right">SL</th>
+                    <th class="py-2 text-right">Đơn giá</th>
+                    <th class="py-2 text-right">Thành tiền</th>
+                </tr>
+            </thead>
+            <tbody class="text-sm">
+                {% for item in order.items %}
+                <tr>
+                    <td class="py-2">{{ item.item_name_snapshot }}</td>
+                    <td class="py-2 text-right">{{ item.qty }}</td>
+                    <td class="py-2 text-right">{{ '{:,.0f}'.format(item.unit_price_snapshot or 0) }} đ</td>
+                    <td class="py-2 text-right font-semibold">{{ '{:,.0f}'.format(item.line_total or 0) }} đ</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        <div class="mt-4 text-right">
+            <p class="text-xl font-bold">Tổng cộng: {{ '{:,.0f}'.format(order.subtotal or 0) }} đ</p>
+        </div>
+    </section>
+</div>
+{% endblock %}

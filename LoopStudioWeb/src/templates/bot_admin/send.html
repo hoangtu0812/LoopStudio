@@ -24,28 +24,54 @@
     <div class="bg-white/80 dark:bg-gray-800/80 backdrop-blur-xl shadow-[0_4px_24px_rgba(0,0,0,0.04)] dark:shadow-[0_4px_24px_rgba(0,0,0,0.2)] border border-gray-200/50 dark:border-gray-700/50 sm:rounded-3xl overflow-hidden relative">
         <form method="post" class="p-6 sm:p-10 relative z-10">
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+            <input type="hidden" name="action" value="send"/>
 
             <div class="space-y-8">
                 <!-- Chat ID -->
                 <div>
                     <label for="chat_id" class="block text-sm font-semibold leading-6 text-gray-900 dark:text-gray-200">Chat ID đích</label>
-                    <p class="text-xs text-gray-500 dark:text-gray-400 mb-2 mt-1">Lấy từ lịch sử truy cập hoặc từ Bot @userinfobot.</p>
+                    <p class="text-xs text-gray-500 dark:text-gray-400 mb-2 mt-1">Chọn một trong các cách: danh bạ Chat ID, người dùng có Telegram ID, hoặc nhập tay.</p>
+                    <div class="mt-2">
+                        <select name="target_id" class="block w-full rounded-xl border-0 py-2.5 px-3 text-sm bg-gray-50 dark:bg-gray-900/50 text-gray-900 dark:text-white ring-1 ring-gray-300 dark:ring-gray-700 focus:ring-2 focus:ring-brand-500">
+                            <option value="">-- Chọn nhanh từ danh bạ Chat ID --</option>
+                            {% for t in chat_targets or [] %}
+                            <option value="{{ t.id }}">{{ t.label }} ({{ t.chat_id }})</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="mt-2">
+                        <select name="recipient_user_id" class="block w-full rounded-xl border-0 py-2.5 px-3 text-sm bg-gray-50 dark:bg-gray-900/50 text-gray-900 dark:text-white ring-1 ring-gray-300 dark:ring-gray-700 focus:ring-2 focus:ring-brand-500">
+                            <option value="">-- Hoặc chọn người dùng có Telegram ID --</option>
+                            {% for u in users_with_telegram or [] %}
+                            <option value="{{ u.id }}">{{ u.username }} ({{ u.telegram_id }})</option>
+                            {% endfor %}
+                        </select>
+                    </div>
                     <div class="mt-2 text-gray-500 relative rounded-md shadow-sm">
                         <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-4">
                             <svg class="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
                             </svg>
                         </div>
-                        <input type="text" name="chat_id" id="chat_id" placeholder="-1001234567890 hoặc 123456789" required
+                        <input type="text" name="chat_id" id="chat_id" placeholder="-1001234567890 hoặc 123456789"
                                class="block w-full rounded-xl border-0 py-3 pl-12 pr-4 text-gray-900 bg-white shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-brand-500 dark:bg-gray-900/50 dark:text-white dark:ring-gray-700 dark:focus:ring-brand-500 sm:text-sm sm:leading-6 transition-all">
                     </div>
                 </div>
 
                 <!-- Message -->
                 <div class="pt-6 border-t border-gray-100 dark:border-gray-700/50">
+                    <label for="message_template_id" class="block text-sm font-semibold leading-6 text-gray-900 dark:text-gray-200 mb-2">Mẫu tin nhắn (tuỳ chọn)</label>
+                    <div class="mt-2">
+                        <select id="message_template_id" name="message_template_id" class="block w-full rounded-xl border-0 py-2.5 px-3 text-sm bg-gray-50 dark:bg-gray-900/50 text-gray-900 dark:text-white ring-1 ring-gray-300 dark:ring-gray-700 focus:ring-2 focus:ring-brand-500">
+                            <option value="">-- Chọn mẫu để gửi nhanh --</option>
+                            {% for t in message_templates or [] %}
+                            <option value="{{ t.id }}" data-content="{{ t.content|e }}">{{ t.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
                     <label for="message" class="block text-sm font-semibold leading-6 text-gray-900 dark:text-gray-200 mb-2">Nội dung tin nhắn</label>
                     <div class="mt-2 text-gray-500 relative rounded-md shadow-sm">
-                        <textarea name="message" id="message" rows="5" required placeholder="Nhập tin nhắn..."
+                        <textarea name="message" id="message" rows="5" placeholder="Nhập tin nhắn..."
                                   class="block w-full rounded-xl border-0 py-3 px-4 text-gray-900 bg-white shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-brand-500 dark:bg-gray-900/50 dark:text-white dark:ring-gray-700 dark:focus:ring-brand-500 sm:text-sm sm:leading-6 transition-all"></textarea>
                     </div>
                 </div>
@@ -65,5 +91,64 @@
             </div>
         </form>
     </div>
+
+    <div class="mt-6 bg-white/80 dark:bg-gray-800/80 backdrop-blur-xl shadow-[0_4px_24px_rgba(0,0,0,0.04)] dark:shadow-[0_4px_24px_rgba(0,0,0,0.2)] border border-gray-200/50 dark:border-gray-700/50 sm:rounded-3xl overflow-hidden relative p-6 sm:p-8">
+        <h2 class="text-xl font-bold text-gray-900 dark:text-white">Mẫu tin nhắn</h2>
+        <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Tạo mẫu để chọn gửi nhanh, không cần nhập tay mỗi lần.</p>
+
+        <form method="post" class="mt-4 space-y-3">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+            <input type="hidden" name="action" value="add_template"/>
+            <div>
+                <label class="block text-sm font-semibold leading-6 text-gray-900 dark:text-gray-200 mb-1">Tên mẫu</label>
+                <input type="text" name="template_name" required placeholder="VD: Nhắc họp buổi sáng"
+                       class="block w-full rounded-xl border-0 py-2.5 px-3 text-gray-900 bg-white shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-brand-500 dark:bg-gray-900/50 dark:text-white dark:ring-gray-700 sm:text-sm">
+            </div>
+            <div>
+                <label class="block text-sm font-semibold leading-6 text-gray-900 dark:text-gray-200 mb-1">Nội dung mẫu</label>
+                <textarea name="template_content" rows="3" required placeholder="Nhập nội dung mẫu..."
+                          class="block w-full rounded-xl border-0 py-2.5 px-3 text-gray-900 bg-white shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-brand-500 dark:bg-gray-900/50 dark:text-white dark:ring-gray-700 sm:text-sm"></textarea>
+            </div>
+            <div class="flex justify-end">
+                <button type="submit" class="inline-flex items-center justify-center rounded-xl bg-brand-600 px-4 py-2 text-sm font-semibold text-white hover:bg-brand-500">
+                    Thêm mẫu
+                </button>
+            </div>
+        </form>
+
+        <div class="mt-6 space-y-2">
+            {% for t in message_templates or [] %}
+            <div class="rounded-xl border border-gray-200 dark:border-gray-700 p-3 bg-gray-50/60 dark:bg-gray-900/30 flex items-start justify-between gap-3">
+                <div class="min-w-0">
+                    <p class="text-sm font-semibold text-gray-900 dark:text-white">{{ t.name }}</p>
+                    <p class="text-xs text-gray-500 dark:text-gray-400 mt-1 line-clamp-2">{{ t.content }}</p>
+                </div>
+                <form method="post" onsubmit="return confirm('Xóa mẫu này?');">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                    <input type="hidden" name="action" value="delete_template"/>
+                    <input type="hidden" name="template_id" value="{{ t.id }}"/>
+                    <button type="submit" class="text-xs px-2.5 py-1.5 rounded bg-rose-600 text-white hover:bg-rose-500">Xóa</button>
+                </form>
+            </div>
+            {% else %}
+            <p class="text-xs text-gray-500 dark:text-gray-400">Chưa có mẫu tin nhắn nào.</p>
+            {% endfor %}
+        </div>
+    </div>
 </div>
+
+<script>
+    (() => {
+        const select = document.getElementById("message_template_id");
+        const message = document.getElementById("message");
+        if (!select || !message) return;
+        select.addEventListener("change", () => {
+            const opt = select.options[select.selectedIndex];
+            const content = opt ? opt.getAttribute("data-content") : "";
+            if (content) {
+                message.value = content;
+            }
+        });
+    })();
+</script>
 {% endblock %}

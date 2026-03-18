@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+{% block title %}Lịch sử hóa đơn - Cafe POS{% endblock %}
+
+{% block content %}
+<div class="space-y-6 lg:space-y-8">
+    <div class="flex flex-col md:flex-row md:items-end justify-between gap-4">
+        <div>
+            <h1 class="text-3xl font-extrabold tracking-tight">
+                <span class="bg-clip-text text-transparent bg-gradient-to-r from-gray-900 to-gray-600 dark:from-white dark:to-gray-300">
+                    Lịch sử hóa đơn
+                </span>
+            </h1>
+            <p class="text-sm md:text-base text-gray-500 dark:text-gray-400 font-medium mt-1">
+                Tra cứu đơn đã thanh toán để in lại bill khi cần.
+            </p>
+        </div>
+        <a href="{{ url_for('cafe_order.index') }}" class="inline-flex items-center px-3 py-2 text-xs font-semibold rounded-lg text-white bg-brand-600 hover:bg-brand-500">
+            Quay lại order
+        </a>
+    </div>
+
+    <section class="bg-white/80 dark:bg-gray-800/80 rounded-2xl border border-gray-200/50 dark:border-gray-700/50 overflow-hidden">
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                <thead class="bg-gray-50/60 dark:bg-gray-900/40">
+                    <tr>
+                        <th class="px-4 py-3 text-left text-xs font-semibold uppercase text-gray-500 dark:text-gray-400">Mã đơn</th>
+                        <th class="px-4 py-3 text-left text-xs font-semibold uppercase text-gray-500 dark:text-gray-400">Bàn</th>
+                        <th class="px-4 py-3 text-left text-xs font-semibold uppercase text-gray-500 dark:text-gray-400">Thanh toán</th>
+                        <th class="px-4 py-3 text-left text-xs font-semibold uppercase text-gray-500 dark:text-gray-400">Thời gian</th>
+                        <th class="px-4 py-3 text-right text-xs font-semibold uppercase text-gray-500 dark:text-gray-400">Tổng tiền</th>
+                        <th class="px-4 py-3 text-right text-xs font-semibold uppercase text-gray-500 dark:text-gray-400">Thao tác</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-200/50 dark:divide-gray-700/50 text-sm">
+                    {% for order in paid_orders %}
+                    <tr>
+                        <td class="px-4 py-3 font-semibold text-gray-900 dark:text-white">#{{ order.id }}</td>
+                        <td class="px-4 py-3 text-gray-700 dark:text-gray-300">{{ order.table_name }}</td>
+                        <td class="px-4 py-3 text-gray-700 dark:text-gray-300">{{ "Tiền mặt" if order.payment_method == "cash" else "Chuyển khoản" }}</td>
+                        <td class="px-4 py-3 text-gray-500 dark:text-gray-400">{{ order.paid_at.strftime('%H:%M %d/%m/%Y') if order.paid_at else "-" }}</td>
+                        <td class="px-4 py-3 text-right font-bold text-emerald-600 dark:text-emerald-400">{{ '{:,.0f}'.format(order.subtotal or 0) }} đ</td>
+                        <td class="px-4 py-3 text-right">
+                            <div class="inline-flex items-center gap-2">
+                                <a href="{{ url_for('cafe_order.invoice', order_id=order.id) }}" class="text-xs px-2.5 py-1.5 rounded bg-brand-600 text-white hover:bg-brand-500">Xem bill</a>
+                                <a href="{{ url_for('cafe_order.invoice_print', order_id=order.id) }}" target="_blank" class="text-xs px-2.5 py-1.5 rounded bg-gray-700 text-white hover:bg-gray-600">In lại</a>
+                            </div>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="6" class="px-4 py-8 text-center text-sm text-gray-500 dark:text-gray-400">Chưa có hóa đơn đã thanh toán.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </section>
+</div>
+{% endblock %}

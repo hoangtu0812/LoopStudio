@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+{% block title %}Lịch sử uptime - {{ site.name }}{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <div>
+        <a href="{{ url_for('uptime.index') }}" class="text-sm font-medium text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300">← Quay lại Uptime Monitor</a>
+        <h1 class="text-3xl font-extrabold tracking-tight mt-2">
+            <span class="bg-clip-text text-transparent bg-gradient-to-r from-gray-900 to-gray-600 dark:from-white dark:to-gray-300">
+                Lịch sử check: {{ site.name }}
+            </span>
+        </h1>
+        <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">{{ site.url }}</p>
+    </div>
+
+    <section class="bg-white/80 dark:bg-gray-800/80 rounded-2xl border border-gray-200/50 dark:border-gray-700/50 overflow-hidden">
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                <thead class="bg-gray-50/60 dark:bg-gray-900/40">
+                    <tr>
+                        <th class="px-4 py-3 text-left text-xs font-semibold uppercase text-gray-500 dark:text-gray-400">Thời gian</th>
+                        <th class="px-4 py-3 text-left text-xs font-semibold uppercase text-gray-500 dark:text-gray-400">Trạng thái</th>
+                        <th class="px-4 py-3 text-left text-xs font-semibold uppercase text-gray-500 dark:text-gray-400">HTTP</th>
+                        <th class="px-4 py-3 text-left text-xs font-semibold uppercase text-gray-500 dark:text-gray-400">Latency</th>
+                        <th class="px-4 py-3 text-left text-xs font-semibold uppercase text-gray-500 dark:text-gray-400">Lỗi</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-200/50 dark:divide-gray-700/50 text-sm">
+                    {% for c in checks %}
+                    <tr>
+                        <td class="px-4 py-3 text-gray-700 dark:text-gray-300">{{ c.checked_at.strftime('%H:%M:%S %d/%m/%Y') }}</td>
+                        <td class="px-4 py-3">
+                            {% if c.is_up %}
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300">UP</span>
+                            {% else %}
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-rose-100 text-rose-700 dark:bg-rose-900/30 dark:text-rose-300">DOWN</span>
+                            {% endif %}
+                        </td>
+                        <td class="px-4 py-3 text-gray-700 dark:text-gray-300">{{ c.status_code if c.status_code is not none else "-" }}</td>
+                        <td class="px-4 py-3 text-gray-700 dark:text-gray-300">{{ c.response_ms if c.response_ms is not none else "-" }} ms</td>
+                        <td class="px-4 py-3 text-xs text-rose-500 dark:text-rose-400">{{ c.error_message or "-" }}</td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="5" class="px-4 py-8 text-center text-sm text-gray-500 dark:text-gray-400">Chưa có lịch sử check.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </section>
+</div>
+{% endblock %}

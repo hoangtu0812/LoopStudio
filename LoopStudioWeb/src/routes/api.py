@@ -4,6 +4,7 @@ from flask import Blueprint, request
 from ..app import db
 from ..models import BotAccessLog
 from ..services.todo_service import build_today_todo_message
+from ..services.uptime_service import build_uptime_bot_message
 
 api_bp = Blueprint("api", __name__, url_prefix="/api")
 
@@ -57,4 +58,11 @@ def bot_otp():
 def bot_todo():
     """Bot gọi để lấy danh sách todo trong ngày."""
     text = build_today_todo_message()
+    return {"status": "ok", "text": text}, 200
+
+
+@api_bp.route("/bot/uptime", methods=["GET"])
+def bot_uptime():
+    """Bot gọi để lấy trạng thái uptime website."""
+    text = build_uptime_bot_message()
     return {"status": "ok", "text": text}, 200

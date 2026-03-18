@@ -2,8 +2,8 @@
 {% block title %}Gantt công việc - Loop Studio{% endblock %}
 
 {% block content %}
-<div class="space-y-6 lg:space-y-8">
-    <div class="flex flex-col md:flex-row md:items-end justify-between gap-4">
+<div class="space-y-5 lg:space-y-6">
+    <div class="flex flex-col xl:flex-row xl:items-end justify-between gap-4">
         <div>
             <h1 class="text-3xl font-extrabold tracking-tight">
                 <span class="bg-clip-text text-transparent bg-gradient-to-r from-gray-900 to-gray-600 dark:from-white dark:to-gray-300">
@@ -14,7 +14,22 @@
                 Xem timeline từ ngày bắt đầu tới deadline của từng công việc.
             </p>
         </div>
-        <div class="flex gap-2">
+        <div class="flex flex-wrap gap-2 items-center">
+            <form method="get" class="flex flex-wrap gap-2 items-center">
+                <input type="hidden" name="collapsed" value="{{ collapsed_query or '' }}">
+                <select name="view" class="rounded-xl border-0 py-2.5 px-3 text-sm font-semibold text-gray-700 bg-white border border-gray-200 hover:bg-gray-50 dark:text-gray-200 dark:bg-gray-800 dark:border-gray-700 dark:hover:bg-gray-700">
+                    <option value="week" {{ 'selected' if view_mode == 'week' else '' }}>Theo tuần</option>
+                    <option value="month" {{ 'selected' if view_mode == 'month' else '' }}>Theo tháng</option>
+                    <option value="year" {{ 'selected' if view_mode == 'year' else '' }}>Theo năm</option>
+                    <option value="custom" {{ 'selected' if view_mode == 'custom' else '' }}>Từ ngày - đến ngày</option>
+                </select>
+                <input type="date" name="anchor" value="{{ anchor_date }}" class="rounded-xl border-0 py-2.5 px-3 text-sm text-gray-700 bg-white border border-gray-200 dark:text-gray-200 dark:bg-gray-800 dark:border-gray-700">
+                <input type="date" name="from_date" value="{{ from_date }}" class="rounded-xl border-0 py-2.5 px-3 text-sm text-gray-700 bg-white border border-gray-200 dark:text-gray-200 dark:bg-gray-800 dark:border-gray-700">
+                <input type="date" name="to_date" value="{{ to_date }}" class="rounded-xl border-0 py-2.5 px-3 text-sm text-gray-700 bg-white border border-gray-200 dark:text-gray-200 dark:bg-gray-800 dark:border-gray-700">
+                <button type="submit" class="inline-flex items-center px-4 py-2.5 text-sm font-semibold rounded-xl text-white bg-gradient-to-r from-brand-500 to-brand-600 hover:from-brand-400 hover:to-brand-500">
+                    Áp dụng
+                </button>
+            </form>
             <a href="{{ url_for('todo.board') }}" class="inline-flex items-center px-4 py-2.5 text-sm font-semibold rounded-xl text-gray-700 bg-white border border-gray-200 hover:bg-gray-50 dark:text-gray-200 dark:bg-gray-800 dark:border-gray-700 dark:hover:bg-gray-700">
                 Kanban
             </a>
@@ -24,25 +39,26 @@
         </div>
     </div>
 
-    <div class="bg-[#103458] dark:bg-[#103458] rounded-2xl border border-cyan-700/40 overflow-hidden">
+    <div class="bg-[#103458] dark:bg-[#103458] rounded-2xl border border-cyan-700/40 overflow-hidden shadow-[0_12px_32px_rgba(3,37,65,0.35)]">
         {% if gantt_rows %}
         <div class="grid grid-cols-[220px_minmax(0,1fr)]">
             <div class="border-r border-cyan-700/50 p-4 bg-[#124169]">
                 <h2 class="text-lg font-bold text-cyan-50 leading-tight">PROJECT<br/>MANAGEMENT</h2>
             </div>
-            <div class="overflow-x-auto">
-                <div class="min-w-[900px]">
-                    <div class="grid border-b border-cyan-700/50" style="grid-template-columns: repeat({{ total_weeks }}, minmax(56px, 1fr));">
+            <div class="overflow-x-auto" data-gantt-scroll="header">
+                <div class="min-w-[1200px]">
+                    <div class="grid border-b border-cyan-700/50" style="grid-template-columns: repeat({{ total_days }}, minmax(36px, 1fr));">
                         {% for m in month_groups %}
                         <div class="text-center py-3 text-cyan-50 font-semibold border-r border-cyan-700/30" style="grid-column: span {{ m.span }};">
                             {{ m.label }}
                         </div>
                         {% endfor %}
                     </div>
-                    <div class="grid border-b border-cyan-700/50" style="grid-template-columns: repeat({{ total_weeks }}, minmax(56px, 1fr));">
-                        {% for wk in week_headers %}
-                        <div class="text-center py-2 text-xs text-cyan-100/90 font-semibold border-r border-cyan-700/20">
-                            {{ wk.label }}
+                    <div class="grid border-b border-cyan-700/50" style="grid-template-columns: repeat({{ total_days }}, minmax(36px, 1fr));">
+                        {% for d in day_headers %}
+                        <div class="text-center py-1.5 border-r border-cyan-700/20 {% if d.is_weekend %}bg-cyan-900/30{% endif %}">
+                            <p class="text-[10px] leading-3 text-cyan-100/80 font-semibold">{{ d.weekday }}</p>
+                            <p class="text-[10px] leading-3 text-cyan-50/90 font-bold mt-0.5">{{ d.date }}</p>
                         </div>
                         {% endfor %}
                     </div>
@@ -53,19 +69,31 @@
         <div class="grid grid-cols-[220px_minmax(0,1fr)]">
             <div class="border-r border-cyan-700/50 bg-[#124169]">
                 {% for row in gantt_rows %}
-                <div class="h-16 px-4 flex flex-col justify-center border-b border-cyan-700/35">
-                    <p class="text-cyan-50 font-semibold leading-tight truncate">{{ row.title }}</p>
-                    <p class="text-[11px] text-cyan-100/75">{{ row.start_label }} → {{ row.end_label }}</p>
+                <div class="h-11 px-3 flex items-center justify-between border-b border-cyan-700/35">
+                    <div class="min-w-0">
+                        <p class="text-cyan-50 text-xs font-semibold leading-tight truncate {{ 'pl-3' if row.is_subtask else '' }}">
+                            {{ "↳ " if row.is_subtask else "" }}{{ row.title }}
+                        </p>
+                        <p class="text-[10px] text-cyan-100/70">{{ row.start_label }} → {{ row.end_label }}</p>
+                    </div>
+                    {% if row.is_parent %}
+                    <a href="{{ toggle_urls.get(row.id) }}"
+                       class="ml-2 shrink-0 inline-flex items-center px-1.5 py-1 rounded text-[10px] font-semibold bg-cyan-900/40 text-cyan-100 hover:bg-cyan-800/50">
+                        {{ "Expand" if row.id in collapsed_ids else "Collapse" }}
+                    </a>
+                    {% endif %}
                 </div>
                 {% endfor %}
             </div>
 
-            <div class="overflow-x-auto">
-                <div class="min-w-[900px]">
+            <div class="overflow-x-auto" data-gantt-scroll="body">
+                <div class="min-w-[1200px] relative">
                     {% for row in gantt_rows %}
-                    <div class="relative h-16 border-b border-cyan-700/35"
-                         style="background-image: repeating-linear-gradient(to right, rgba(34,211,238,0.16) 0, rgba(34,211,238,0.16) 1px, transparent 1px, transparent calc(100% / {{ total_weeks }}));">
-                        <div class="absolute top-1/2 -translate-y-1/2 h-7 rounded-full shadow-md
+                    <div class="relative h-11 border-b border-cyan-700/35"
+                         style="background-image: repeating-linear-gradient(to right, rgba(34,211,238,0.16) 0, rgba(34,211,238,0.16) 1px, transparent 1px, transparent calc(100% / {{ total_days }}));">
+                        <div class="absolute top-1/2 -translate-y-1/2 h-4 rounded-full shadow-[0_2px_8px_rgba(0,0,0,0.25)]
+                            {% if row.is_subtask %}ring-2 ring-white/35 ring-offset-1 ring-offset-transparent
+                            {% endif %}
                             {% if row.status == 'doing' %}bg-amber-400
                             {% elif row.status == 'done' %}bg-emerald-400
                             {% else %}bg-sky-300
@@ -74,6 +102,19 @@
                         </div>
                     </div>
                     {% endfor %}
+
+                    {% if connectors %}
+                    <svg class="absolute inset-0 pointer-events-none" viewBox="0 0 100 {{ gantt_rows|length * row_height }}" preserveAspectRatio="none">
+                        {% for c in connectors %}
+                        {% set y1 = c.from_row * row_height + (row_height / 2) %}
+                        {% set y2 = c.to_row * row_height + (row_height / 2) %}
+                        {% set xm = ((c.x1 + c.x2) / 2) %}
+                        <polyline points="{{ c.x1 }},{{ y1 }} {{ xm }},{{ y1 }} {{ xm }},{{ y2 }} {{ c.x2 }},{{ y2 }}"
+                                  fill="none" stroke="rgba(125,211,252,0.95)" stroke-width="0.45" stroke-dasharray="0" />
+                        <circle cx="{{ c.x2 }}" cy="{{ y2 }}" r="0.65" fill="rgba(125,211,252,1)" />
+                        {% endfor %}
+                    </svg>
+                    {% endif %}
                 </div>
             </div>
         </div>
@@ -84,5 +125,23 @@
         {% endif %}
     </div>
 </div>
+<script>
+    (function () {
+        const header = document.querySelector('[data-gantt-scroll="header"]');
+        const body = document.querySelector('[data-gantt-scroll="body"]');
+        if (!header || !body) return;
+        let syncing = false;
+        const sync = (source, target) => {
+            if (syncing) return;
+            syncing = true;
+            target.scrollLeft = source.scrollLeft;
+            requestAnimationFrame(() => {
+                syncing = false;
+            });
+        };
+        header.addEventListener("scroll", () => sync(header, body), { passive: true });
+        body.addEventListener("scroll", () => sync(body, header), { passive: true });
+    })();
+</script>
 {% endblock %}
 

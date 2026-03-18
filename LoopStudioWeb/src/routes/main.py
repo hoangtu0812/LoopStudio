@@ -1,5 +1,5 @@
 """Trang chủ - intro (không cần đăng nhập) và dashboard."""
-from flask import Blueprint, render_template
+from flask import Blueprint, render_template, url_for
 from flask_login import current_user, login_required
 
 main_bp = Blueprint("main", __name__)
@@ -67,3 +67,39 @@ def profile():
         return redirect(url_for("main.profile"))
         
     return render_template("main/profile.html")
+
+
+@main_bp.route("/api-docs")
+def api_docs():
+    """Trang tài liệu API nội bộ."""
+    sections = [
+        {
+            "title": "Bot APIs",
+            "items": [
+                {"method": "POST", "path": "/api/bot/log", "desc": "Ghi log truy cập từ Telegram bot."},
+                {"method": "POST", "path": "/api/bot/otp", "desc": "Lấy OTP kích hoạt tài khoản theo username."},
+                {"method": "GET", "path": "/api/bot/todo", "desc": "Lấy nội dung danh sách todo hôm nay."},
+                {"method": "GET", "path": "/api/bot/uptime", "desc": "Lấy trạng thái uptime hiện tại."},
+            ],
+        },
+        {
+            "title": "Todo APIs (Web Form Endpoints)",
+            "items": [
+                {"method": "POST", "path": "/todo/", "desc": "Tạo task mới (weekly/deadline)."},
+                {"method": "POST", "path": "/todo/<id>/update", "desc": "Cập nhật task/subtask."},
+                {"method": "POST", "path": "/todo/<id>/subtasks", "desc": "Tạo subtask cho task cha."},
+                {"method": "POST", "path": "/todo/<id>/move", "desc": "Đổi trạng thái backlog/doing/done."},
+                {"method": "GET", "path": "/todo/gantt", "desc": "Xem gantt (week/month/year/custom)."},
+            ],
+        },
+        {
+            "title": "Uptime APIs (Web + Bot integration)",
+            "items": [
+                {"method": "GET", "path": "/uptime/", "desc": "Trang monitor uptime."},
+                {"method": "POST", "path": "/uptime/<id>/check-now", "desc": "Check website thủ công."},
+                {"method": "POST", "path": "/uptime/<id>/toggle", "desc": "Pause/resume monitor."},
+                {"method": "GET", "path": "/uptime/<id>/history", "desc": "Lịch sử check chi tiết."},
+            ],
+        },
+    ]
+    return render_template("main/api_docs.html", sections=sections)

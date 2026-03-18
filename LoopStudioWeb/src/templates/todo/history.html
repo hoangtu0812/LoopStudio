@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+{% block title %}Lịch sử thay đổi task - Loop Studio{% endblock %}
+
+{% block content %}
+<div class="space-y-6 max-w-4xl mx-auto">
+    <div class="flex items-center justify-between gap-3">
+        <div>
+            <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Lịch sử thay đổi</h1>
+            <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Task: <span class="font-semibold">{{ task.title }}</span> (ID {{ task.id }})</p>
+        </div>
+        <a href="{{ url_for('todo.index') }}" class="inline-flex items-center px-3 py-2 text-sm font-semibold rounded-lg bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700">
+            Quay lại danh sách
+        </a>
+    </div>
+
+    <div class="bg-white/80 dark:bg-gray-800/80 rounded-2xl border border-gray-200/60 dark:border-gray-700/60 overflow-hidden">
+        <table class="min-w-full text-sm">
+            <thead class="bg-gray-50 dark:bg-gray-900/40 text-gray-600 dark:text-gray-300">
+                <tr>
+                    <th class="px-4 py-3 text-left">Thời gian</th>
+                    <th class="px-4 py-3 text-left">Hành động</th>
+                    <th class="px-4 py-3 text-left">Chi tiết</th>
+                    <th class="px-4 py-3 text-left">Người thực hiện</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-100 dark:divide-gray-700/50">
+                {% for log in logs %}
+                <tr>
+                    <td class="px-4 py-3 text-gray-700 dark:text-gray-200">{{ log.changed_at.strftime('%H:%M:%S %d/%m/%Y') }}</td>
+                    <td class="px-4 py-3">
+                        <span class="inline-flex px-2 py-1 rounded-full text-xs font-semibold bg-indigo-100 text-indigo-700 dark:bg-indigo-900/40 dark:text-indigo-300">
+                            {{ log.action }}
+                        </span>
+                    </td>
+                    <td class="px-4 py-3 text-gray-600 dark:text-gray-300">{{ log.detail or "-" }}</td>
+                    <td class="px-4 py-3 text-gray-600 dark:text-gray-300">{{ log.changed_by or "-" }}</td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td class="px-4 py-8 text-center text-gray-500 dark:text-gray-400" colspan="4">Chưa có lịch sử thay đổi.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

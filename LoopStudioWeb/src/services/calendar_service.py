@@ -12,6 +12,7 @@ def _event(
     status: str = "planned",
     source_url: str | None = None,
     description: str | None = None,
+    event_id: int | None = None,
 ) -> dict:
     return {
         "title": title,
@@ -21,6 +22,7 @@ def _event(
         "status": status,
         "source_url": source_url,
         "description": description,
+        "event_id": event_id,
     }
 
 
@@ -70,21 +72,7 @@ def collect_events(start_dt: datetime, end_dt: datetime) -> list[dict]:
                             description=t.note,
                         )
                     )
-        elif t.task_type == "deadline":
-            st = t.start_at or t.created_at
-            et = t.deadline or st
-            if st and et and et >= start_dt and st <= end_dt:
-                events.append(
-                    _event(
-                        title=t.title,
-                        event_type="todo",
-                        start_at=st,
-                        end_at=et,
-                        status=t.status or "planned",
-                        source_url="/todo/",
-                        description=t.note,
-                    )
-                )
+        # TODO deadline dạng từ ngày-đến ngày không hiển thị trên Calendar chung.
 
     # 3) Calendar events (meeting/custom)
     custom_events = CalendarEvent.query.filter(
@@ -101,6 +89,7 @@ def collect_events(start_dt: datetime, end_dt: datetime) -> list[dict]:
                 status=e.status or "planned",
                 source_url="/calendar/",
                 description=e.description,
+                event_id=e.id,
             )
         )
 

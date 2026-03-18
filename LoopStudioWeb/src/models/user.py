@@ -16,6 +16,8 @@ class User(UserMixin, db.Model):
     is_active = db.Column(db.Boolean, default=True)  # True for existing, False for new unverified
     otp_code = db.Column(db.String(6), nullable=True)
     telegram_id = db.Column(db.String(50), nullable=True)
+    reset_otp_code = db.Column(db.String(6), nullable=True)
+    reset_otp_expires_at = db.Column(db.DateTime, nullable=True)
 
     groups = db.relationship(
         "UserGroup",

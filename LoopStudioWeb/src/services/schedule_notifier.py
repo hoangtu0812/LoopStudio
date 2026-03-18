@@ -23,13 +23,19 @@ def _check_schedule_reminders(app):
     """Kiểm tra các buổi học sắp diễn ra và gửi thông báo."""
     with app.app_context():
         from ..app import db
-        from ..models import ScheduleSession, NotificationConfig
+        from ..models import ScheduleSession, NotificationConfig, TelegramChatTarget
         from ..services.telegram_service import send_telegram_message
 
         cfg = NotificationConfig.query.filter_by(
             config_type="schedule_reminder", enabled=True
         ).first()
-        if not cfg or not cfg.chat_id:
+        if not cfg:
+            return
+        chat_id = cfg.chat_id
+        if cfg.chat_target_id:
+            target = TelegramChatTarget.query.get(cfg.chat_target_id)
+            chat_id = target.chat_id if target and target.is_active else chat_id
+        if not chat_id:
             return
         now = datetime.now()
         lo = now + timedelta(minutes=cfg.minutes_before - 2)
@@ -41,7 +47,7 @@ def _check_schedule_reminders(app):
             session_dt = datetime.combine(s.session_date, s.start_time)
             if lo <= session_dt <= hi:
                 msg = build_schedule_reminder_message(s)
-                if send_telegram_message(cfg.chat_id, msg):
+                if send_telegram_message(chat_id, msg):
                     s.reminder_sent = True
         db.session.commit()
 
@@ -50,13 +56,19 @@ def _check_task_reminders(app):
     """Kiểm tra task sắp đến deadline."""
     with app.app_context():
         from ..app import db
-        from ..models import Task, NotificationConfig
+        from ..models import Task, NotificationConfig, TelegramChatTarget
         from ..services.telegram_service import send_telegram_message
 
         cfg = NotificationConfig.query.filter_by(
             config_type="task_reminder", enabled=True
         ).first()
-        if not cfg or not cfg.chat_id:
+        if not cfg:
+            return
+        chat_id = cfg.chat_id
+        if cfg.chat_target_id:
+            target = TelegramChatTarget.query.get(cfg.chat_target_id)
+            chat_id = target.chat_id if target and target.is_active else chat_id
+        if not chat_id:
             return
         now = datetime.now()
         target = now + timedelta(minutes=cfg.minutes_before)
@@ -76,31 +88,39 @@ def _check_task_reminders(app):
                 f"• Deadline: {deadline_str}\n"
                 "⚠️ Đừng quên hoàn thành trước hạn!"
             )
-            send_telegram_message(cfg.chat_id, msg)
+            send_telegram_message(chat_id, msg)
         db.session.commit()
 
 
 def _get_todo_chat_ids():
-    from ..models import NotificationConfig
+    from ..models import NotificationConfig, TelegramChatTarget
 
     configs = NotificationConfig.query.filter(
         NotificationConfig.enabled == True,  # noqa: E712
-        NotificationConfig.chat_id != "",
     ).all()
+    target_map = {
+        t.id: t.chat_id
+        for t in TelegramChatTarget.query.filter(
+            TelegramChatTarget.is_active == True  # noqa: E712
+        ).all()
+    }
+
+    def _resolve_chat_id(cfg):
+        return (target_map.get(cfg.chat_target_id) or cfg.chat_id or "").strip()
 
     preferred = {"todo_daily_digest", "todo_deadline_reminder"}
     preferred_chat_ids = {
-        c.chat_id.strip()
+        _resolve_chat_id(c)
         for c in configs
-        if c.config_type in preferred and c.chat_id and c.chat_id.strip()
+        if c.config_type in preferred and _resolve_chat_id(c)
     }
     if preferred_chat_ids:
         return sorted(preferred_chat_ids)
 
     fallback_chat_ids = {
-        c.chat_id.strip()
+        _resolve_chat_id(c)
         for c in configs
-        if c.config_type == "schedule_reminder" and c.chat_id and c.chat_id.strip()
+        if c.config_type == "schedule_reminder" and _resolve_chat_id(c)
     }
     return sorted(fallback_chat_ids)
 
@@ -166,6 +186,22 @@ def _check_todo_deadline_reminders(app):
         db.session.commit()
 
 
+def _check_uptime_monitors(app):
+    """Check uptime các website đến hạn."""
+    with app.app_context():
+        from ..services.uptime_service import check_due_sites
+
+        check_due_sites()
+
+
+def _cleanup_uptime_history(app):
+    """Dọn lịch sử uptime quá cũ (7 ngày)."""
+    with app.app_context():
+        from ..services.uptime_service import cleanup_old_checks
+
+        cleanup_old_checks(days=7)
+
+
 def start_scheduler(app):
     """Khởi động scheduler trong Flask app context."""
     scheduler = BackgroundScheduler(timezone=TIMEZONE)
@@ -173,4 +209,6 @@ def start_scheduler(app):
     scheduler.add_job(lambda: _check_task_reminders(app), "interval", minutes=1)
     scheduler.add_job(lambda: _check_todo_deadline_reminders(app), "interval", minutes=1)
     scheduler.add_job(lambda: _send_daily_todo_digest(app), "cron", hour=7, minute=30)
+    scheduler.add_job(lambda: _check_uptime_monitors(app), "interval", seconds=30)
+    scheduler.add_job(lambda: _cleanup_uptime_history(app), "cron", hour=3, minute=10)
     scheduler.start()

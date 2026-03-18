@@ -1,5 +1,7 @@
 from datetime import datetime
 
+from sqlalchemy.orm import backref
+
 from ..app import db
 
 
@@ -12,6 +14,7 @@ class TodoTask(db.Model):
     title = db.Column(db.String(300), nullable=False)
     note = db.Column(db.String(1000), nullable=True)
     task_type = db.Column(db.String(20), nullable=False)  # weekly | deadline
+    parent_task_id = db.Column(db.Integer, db.ForeignKey("todo_tasks.id"), nullable=True, index=True)
 
     # Weekly task: 0=Mon .. 6=Sun
     weekday = db.Column(db.Integer, nullable=True)
@@ -29,3 +32,29 @@ class TodoTask(db.Model):
 
     is_active = db.Column(db.Boolean, default=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    parent_task = db.relationship(
+        "TodoTask",
+        remote_side=[id],
+        backref=backref("subtasks", cascade="all, delete-orphan"),
+    )
+    change_logs = db.relationship(
+        "TodoTaskChangeLog",
+        backref="task",
+        cascade="all, delete-orphan",
+        order_by="desc(TodoTaskChangeLog.changed_at)",
+    )
+
+
+class TodoTaskChangeLog(db.Model):
+    """Lịch sử thay đổi task/subtask."""
+
+    __tablename__ = "todo_task_change_logs"
+
+    id = db.Column(db.Integer, primary_key=True)
+    task_id = db.Column(db.Integer, db.ForeignKey("todo_tasks.id"), nullable=False, index=True)
+    action = db.Column(db.String(40), nullable=False)  # created | updated | status_changed | ...
+    detail = db.Column(db.String(2000), nullable=True)
+    changed_by = db.Column(db.String(120), nullable=True)
+    changed_at = db.Column(db.DateTime, default=datetime.utcnow, index=True)

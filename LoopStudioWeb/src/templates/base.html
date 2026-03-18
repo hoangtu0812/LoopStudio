@@ -8,7 +8,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}Loop Studio{% endblock %} - Loop Studio</title>
-    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2310b981' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 2L2 7l10 5 10-5-10-5z'%3E%3C/path%3E%3Cpath d='M2 17l10 5 10-5'%3E%3C/path%3E%3Cpath d='M2 12l10 5 10-5'%3E%3C/path%3E%3C/svg%3E">
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename='logo.png') }}">
     
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -22,11 +22,11 @@
                 extend: {
                     colors: {
                         brand: {
-                            50: '#ecfdf5',
-                            100: '#d1fae5',
-                            500: '#10b981',
-                            600: '#059669',
-                            900: '#064e3b',
+                            50: '#ecfeff',
+                            100: '#cffafe',
+                            500: '#22d3ee',
+                            600: '#06b6d4',
+                            900: '#1e3a8a',
                         }
                     }
                 }
@@ -52,7 +52,7 @@
     {% block head %}{% endblock %}
 </head>
 
-<body class="bg-gradient-to-br from-indigo-50 via-white to-cyan-50 dark:from-gray-900 dark:via-gray-800 dark:to-slate-900 text-gray-900 dark:text-gray-100 transition-colors duration-200 antialiased selection:bg-brand-500 selection:text-white min-h-screen">
+<body class="bg-gradient-to-br from-cyan-50 via-blue-50 to-indigo-100 dark:from-slate-950 dark:via-blue-950 dark:to-cyan-950 text-gray-900 dark:text-gray-100 transition-colors duration-200 antialiased selection:bg-brand-500 selection:text-white min-h-screen">
     <div class="flex h-screen overflow-hidden bg-white/20 dark:bg-black/20 backdrop-blur-sm" x-data="{ sidebarOpen: false }">
 
         {% if current_user.is_authenticated %}
@@ -82,15 +82,18 @@
 
                     <!-- Mobile Sidebar component -->
                     <aside class="flex grow flex-col gap-y-5 overflow-y-auto bg-white/90 dark:bg-gray-800/90 backdrop-blur-md pb-4 pt-4 px-3 ring-1 ring-black/10 dark:ring-white/10 shadow-[4px_0_24px_rgba(0,0,0,0.1)] dark:shadow-[4px_0_24px_rgba(0,0,0,0.3)]">
-                        <div class="h-16 flex items-center px-3 border-b border-gray-200 dark:border-gray-700/50 gap-2">
-                            <svg class="w-6 h-6 text-brand-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                <path d="M12 2L2 7l10 5 10-5-10-5z"></path>
-                                <path d="M2 17l10 5 10-5"></path>
-                                <path d="M2 12l10 5 10-5"></path>
-                            </svg>
-                            <span class="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-brand-600 to-cyan-600 dark:from-brand-400 dark:to-cyan-400 tracking-tight">Loop Studio</span>
+                        <div class="h-16 flex items-center px-3 border-b border-gray-200 dark:border-gray-700/50">
+                            <img src="{{ url_for('static', filename='logo.png') }}" alt="Loop Studio" class="h-10 w-auto max-w-[180px] object-contain">
                         </div>
-                        <nav class="flex-1 space-y-2 mt-4">
+                        <div class="mt-4 px-1">
+                            <button type="button" data-nav-edit-toggle class="w-full inline-flex items-center justify-center gap-2 rounded-lg border border-gray-300/70 dark:border-gray-600/70 bg-white/70 dark:bg-gray-900/60 px-3 py-2 text-xs font-semibold text-gray-700 dark:text-gray-200 hover:bg-gray-100/80 dark:hover:bg-gray-800/80 transition">
+                                <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16.862 3.487a2.1 2.1 0 113.032 2.914L8.89 17.855a4.5 4.5 0 01-2.085 1.173l-3.29.823.823-3.29a4.5 4.5 0 011.173-2.085L16.862 3.487z"/>
+                                </svg>
+                                <span data-nav-edit-label>Edit vị trí menu</span>
+                            </button>
+                        </div>
+                        <nav class="flex-1 space-y-2 mt-3" data-sortable-nav>
                             <a href="{{ url_for('main.dashboard') }}"
                                 class="flex items-center px-3 py-2.5 text-sm font-medium rounded-xl hover:bg-gray-100/50 dark:hover:bg-gray-700/50 hover:shadow-sm transition-all duration-200 {% if request.endpoint == 'main.dashboard' %}bg-gray-100/60 text-brand-700 dark:bg-gray-700/60 dark:text-brand-300 shadow-sm border border-gray-200/40 dark:border-gray-600/50{% endif %}">
                                 <svg class="mr-3 h-5 w-5 opacity-75" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -123,6 +126,24 @@
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"></path>
                                 </svg>
                                 Công việc
+                            </a>
+                            {% endif %}
+                            {% if user_can_access(current_user, 'cafe') %}
+                            <a href="{{ url_for('cafe_order.index') }}"
+                                class="flex items-center px-3 py-2.5 text-sm font-medium rounded-xl hover:bg-gray-100/50 dark:hover:bg-gray-700/50 hover:shadow-sm transition-all duration-200 {% if request.endpoint and request.endpoint.startswith('cafe_') %}bg-gray-100/60 text-brand-700 dark:bg-gray-700/60 dark:text-brand-300 shadow-sm border border-gray-200/40 dark:border-gray-600/50{% endif %}">
+                                <svg class="mr-3 h-5 w-5 opacity-75" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 8h12M8 13h8m-9 7h10a2 2 0 002-2V6a2 2 0 00-2-2H7a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                                </svg>
+                                Cafe POS
+                            </a>
+                            {% endif %}
+                            {% if user_can_access(current_user, 'uptime') %}
+                            <a href="{{ url_for('uptime.index') }}"
+                                class="flex items-center px-3 py-2.5 text-sm font-medium rounded-xl hover:bg-gray-100/50 dark:hover:bg-gray-700/50 hover:shadow-sm transition-all duration-200 {% if request.endpoint and request.endpoint.startswith('uptime.') %}bg-gray-100/60 text-brand-700 dark:bg-gray-700/60 dark:text-brand-300 shadow-sm border border-gray-200/40 dark:border-gray-600/50{% endif %}">
+                                <svg class="mr-3 h-5 w-5 opacity-75" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19V6l12-3v13M9 19a3 3 0 11-6 0 3 3 0 016 0zm12-3a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                </svg>
+                                Uptime Monitor
                             </a>
                             {% endif %}
                             {% if user_can_access(current_user, 'dashboard') %}
@@ -183,15 +204,18 @@
 
         <!-- Sidebar Navigation (Desktop) -->
         <aside class="hidden lg:flex flex-col w-64 flex-shrink-0 bg-white/40 dark:bg-gray-800/40 backdrop-blur-md border-r border-white/20 dark:border-gray-700/50 transition-colors duration-200 shadow-[4px_0_24px_rgba(0,0,0,0.05)] dark:shadow-[4px_0_24px_rgba(0,0,0,0.2)]">
-            <div class="h-16 flex items-center px-6 border-b border-white/20 dark:border-gray-700/50 gap-2">
-                <svg class="w-7 h-7 text-brand-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M12 2L2 7l10 5 10-5-10-5z"></path>
-                    <path d="M2 17l10 5 10-5"></path>
-                    <path d="M2 12l10 5 10-5"></path>
-                </svg>
-                <span class="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-brand-600 to-cyan-600 dark:from-brand-400 dark:to-cyan-400 tracking-tight">Loop Studio</span>
+            <div class="h-16 flex items-center px-6 border-b border-white/20 dark:border-gray-700/50">
+                <img src="{{ url_for('static', filename='logo.png') }}" alt="Loop Studio" class="h-10 w-auto max-w-[190px] object-contain">
             </div>
-            <nav class="flex-1 overflow-y-auto py-4 px-3 space-y-2">
+            <div class="px-3 pt-4 pb-2">
+                <button type="button" data-nav-edit-toggle class="w-full inline-flex items-center justify-center gap-2 rounded-lg border border-gray-300/70 dark:border-gray-600/70 bg-white/70 dark:bg-gray-900/60 px-3 py-2 text-xs font-semibold text-gray-700 dark:text-gray-200 hover:bg-gray-100/80 dark:hover:bg-gray-800/80 transition">
+                    <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16.862 3.487a2.1 2.1 0 113.032 2.914L8.89 17.855a4.5 4.5 0 01-2.085 1.173l-3.29.823.823-3.29a4.5 4.5 0 011.173-2.085L16.862 3.487z"/>
+                    </svg>
+                    <span data-nav-edit-label>Edit vị trí menu</span>
+                </button>
+            </div>
+            <nav class="flex-1 overflow-y-auto py-2 px-3 space-y-2" data-sortable-nav>
                 <a href="{{ url_for('main.dashboard') }}"
                     class="flex items-center px-3 py-2.5 text-sm font-medium rounded-xl hover:bg-white/50 dark:hover:bg-gray-700/50 hover:shadow-sm transition-all duration-200 {% if request.endpoint == 'main.dashboard' %}bg-white/60 text-brand-700 dark:bg-gray-700/60 dark:text-brand-300 shadow-sm border border-white/40 dark:border-gray-600/50{% endif %}">
                     <svg class="mr-3 h-5 w-5 opacity-75" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -224,6 +248,24 @@
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"></path>
                     </svg>
                     Công việc
+                </a>
+                {% endif %}
+                {% if user_can_access(current_user, 'cafe') %}
+                <a href="{{ url_for('cafe_order.index') }}"
+                    class="flex items-center px-3 py-2.5 text-sm font-medium rounded-xl hover:bg-white/50 dark:hover:bg-gray-700/50 hover:shadow-sm transition-all duration-200 {% if request.endpoint and request.endpoint.startswith('cafe_') %}bg-white/60 text-brand-700 dark:bg-gray-700/60 dark:text-brand-300 shadow-sm border border-white/40 dark:border-gray-600/50{% endif %}">
+                    <svg class="mr-3 h-5 w-5 opacity-75" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 8h12M8 13h8m-9 7h10a2 2 0 002-2V6a2 2 0 00-2-2H7a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                    </svg>
+                    Cafe POS
+                </a>
+                {% endif %}
+                {% if user_can_access(current_user, 'uptime') %}
+                <a href="{{ url_for('uptime.index') }}"
+                    class="flex items-center px-3 py-2.5 text-sm font-medium rounded-xl hover:bg-white/50 dark:hover:bg-gray-700/50 hover:shadow-sm transition-all duration-200 {% if request.endpoint and request.endpoint.startswith('uptime.') %}bg-white/60 text-brand-700 dark:bg-gray-700/60 dark:text-brand-300 shadow-sm border border-white/40 dark:border-gray-600/50{% endif %}">
+                    <svg class="mr-3 h-5 w-5 opacity-75" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19V6l12-3v13M9 19a3 3 0 11-6 0 3 3 0 016 0zm12-3a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                    </svg>
+                    Uptime Monitor
                 </a>
                 {% endif %}
                 {% if user_can_access(current_user, 'dashboard') %}
@@ -282,7 +324,7 @@
         {% endif %}
 
         <!-- Main Content -->
-        <main class="flex-1 overflow-y-auto w-full relative min-h-screen">
+        <main class="flex-1 overflow-y-auto w-full relative min-h-screen flex flex-col">
             <!-- Top bar -->
             <div class="absolute top-4 right-4 z-40 flex items-center gap-4">
                 {% if current_user.is_authenticated %}
@@ -305,7 +347,7 @@
                 {% endif %}
             </div>
 
-            <div class="container mx-auto px-4 sm:px-6 lg:px-8 py-8 h-full max-w-7xl pt-16 lg:pt-8">
+            <div class="container mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full flex-1 max-w-7xl pt-16 lg:pt-8">
                 
                 <!-- Flash messages -->
                 {% with messages = get_flashed_messages(with_categories=true) %}
@@ -329,10 +371,198 @@
                 {% block content %}{% endblock %}
             </div>
             
-            <footer class="mt-auto py-6 text-center text-xs font-medium text-gray-500/80 dark:text-gray-400/80 border-t border-gray-200/20 dark:border-gray-700/20 w-full relative z-10 hidden lg:block">
+            <footer class="shrink-0 py-6 text-center text-xs font-medium text-gray-500/80 dark:text-gray-400/80 border-t border-gray-200/20 dark:border-gray-700/20 w-full relative z-10 hidden lg:block">
                 &copy; {{ range(2026, 2027)|first }} Loop Studio. All rights reserved.
             </footer>
         </main>
     </div>
+    <script>
+        (function () {
+            const navs = Array.from(document.querySelectorAll("[data-sortable-nav]"));
+            if (!navs.length) return;
+
+            const userId = "{{ current_user.id if current_user.is_authenticated else 'guest' }}";
+            const storageKey = `loopstudio.sidebar.order.${userId}`;
+            const editModeKey = `loopstudio.sidebar.editmode.${userId}`;
+            const editToggles = Array.from(document.querySelectorAll("[data-nav-edit-toggle]"));
+            const editLabels = Array.from(document.querySelectorAll("[data-nav-edit-label]"));
+
+            const getItems = (nav) => Array.from(nav.children).filter((el) => el.matches("a[href]"));
+            const getItemKey = (item) => {
+                try {
+                    const parsed = new URL(item.href, window.location.origin);
+                    return parsed.pathname || item.getAttribute("href");
+                } catch (e) {
+                    return item.getAttribute("href") || "";
+                }
+            };
+
+            const applyOrderToNav = (nav, order) => {
+                const items = getItems(nav);
+                if (!items.length) return;
+                const rank = new Map(order.map((key, idx) => [key, idx]));
+                items
+                    .sort((a, b) => {
+                        const ra = rank.has(getItemKey(a)) ? rank.get(getItemKey(a)) : 9999;
+                        const rb = rank.has(getItemKey(b)) ? rank.get(getItemKey(b)) : 9999;
+                        return ra - rb;
+                    })
+                    .forEach((item) => nav.appendChild(item));
+            };
+
+            const saveOrder = (order) => localStorage.setItem(storageKey, JSON.stringify(order));
+            const readOrder = () => {
+                try {
+                    const raw = localStorage.getItem(storageKey);
+                    const parsed = raw ? JSON.parse(raw) : [];
+                    return Array.isArray(parsed) ? parsed : [];
+                } catch (e) {
+                    return [];
+                }
+            };
+
+            const collectOrder = (nav) => getItems(nav).map(getItemKey);
+            const applyOrderAll = (order) => navs.forEach((nav) => applyOrderToNav(nav, order));
+            const iconColorByPath = {
+                "/dashboard": "text-slate-500 dark:text-slate-300",
+                "/calendar": "text-blue-500 dark:text-blue-400",
+                "/schedule": "text-emerald-500 dark:text-emerald-400",
+                "/todo": "text-indigo-500 dark:text-indigo-400",
+                "/cafe/order": "text-amber-500 dark:text-amber-400",
+                "/uptime": "text-teal-500 dark:text-teal-400",
+                "/admin/dashboard": "text-cyan-500 dark:text-cyan-400",
+                "/bot-admin": "text-violet-500 dark:text-violet-400",
+                "/bot-admin/users": "text-fuchsia-500 dark:text-fuchsia-400",
+                "/group-admin": "text-rose-500 dark:text-rose-400",
+            };
+            const removableColorClasses = [
+                "text-slate-500", "dark:text-slate-300",
+                "text-blue-500", "dark:text-blue-400",
+                "text-emerald-500", "dark:text-emerald-400",
+                "text-indigo-500", "dark:text-indigo-400",
+                "text-amber-500", "dark:text-amber-400",
+                "text-teal-500", "dark:text-teal-400",
+                "text-cyan-500", "dark:text-cyan-400",
+                "text-violet-500", "dark:text-violet-400",
+                "text-fuchsia-500", "dark:text-fuchsia-400",
+                "text-rose-500", "dark:text-rose-400",
+                "text-gray-500", "dark:text-gray-400",
+            ];
+            const applyIconColors = () => {
+                navs.forEach((nav) => {
+                    getItems(nav).forEach((item) => {
+                        const icon = item.querySelector("svg");
+                        if (!icon) return;
+                        icon.classList.remove(...removableColorClasses);
+                        icon.classList.add("opacity-90");
+                        const key = getItemKey(item);
+                        const colorClasses =
+                            Object.entries(iconColorByPath).find(([prefix]) => key.startsWith(prefix))?.[1]
+                            || "text-gray-500 dark:text-gray-400";
+                        icon.classList.add(...colorClasses.split(" "));
+                    });
+                });
+            };
+
+            const saved = readOrder();
+            if (saved.length) {
+                applyOrderAll(saved);
+            } else {
+                saveOrder(collectOrder(navs[0]));
+            }
+            applyIconColors();
+
+            let editMode = localStorage.getItem(editModeKey) === "1";
+            let draggingKey = null;
+            let sourceNav = null;
+
+            const applyEditMode = () => {
+                editLabels.forEach((label) => {
+                    label.textContent = editMode ? "Hoàn tất chỉnh vị trí" : "Edit vị trí menu";
+                });
+                editToggles.forEach((btn) => {
+                    btn.classList.toggle("bg-brand-100", editMode);
+                    btn.classList.toggle("dark:bg-brand-900/30", editMode);
+                    btn.classList.toggle("border-brand-300", editMode);
+                    btn.classList.toggle("dark:border-brand-700", editMode);
+                    btn.classList.toggle("text-brand-700", editMode);
+                    btn.classList.toggle("dark:text-brand-200", editMode);
+                });
+
+                navs.forEach((nav) => {
+                    nav.classList.toggle("ring-1", editMode);
+                    nav.classList.toggle("ring-brand-400/60", editMode);
+                    nav.classList.toggle("rounded-xl", editMode);
+                    getItems(nav).forEach((item) => {
+                        item.setAttribute("draggable", editMode ? "true" : "false");
+                        item.title = editMode ? "Kéo để đổi vị trí menu" : "";
+                        item.classList.toggle("cursor-move", editMode);
+                    });
+                });
+                localStorage.setItem(editModeKey, editMode ? "1" : "0");
+            };
+
+            editToggles.forEach((btn) => {
+                btn.addEventListener("click", () => {
+                    editMode = !editMode;
+                    applyEditMode();
+                });
+            });
+
+            navs.forEach((nav) => {
+                getItems(nav).forEach((item) => {
+                    item.addEventListener("dragstart", (event) => {
+                        if (!editMode) {
+                            event.preventDefault();
+                            return;
+                        }
+                        draggingKey = getItemKey(item);
+                        sourceNav = nav;
+                        item.classList.add("opacity-60");
+                        event.dataTransfer.effectAllowed = "move";
+                        event.dataTransfer.setData("text/plain", draggingKey);
+                    });
+
+                    item.addEventListener("dragend", () => {
+                        item.classList.remove("opacity-60");
+                    });
+                });
+
+                nav.addEventListener("dragover", (event) => {
+                    if (!editMode) return;
+                    if (!draggingKey || sourceNav !== nav) return;
+                    event.preventDefault();
+                    const target = event.target.closest("a[href]");
+                    if (!target) return;
+
+                    const draggingEl = getItems(nav).find((el) => getItemKey(el) === draggingKey);
+                    if (!draggingEl || draggingEl === target) return;
+
+                    const rect = target.getBoundingClientRect();
+                    const isAfter = event.clientY > rect.top + rect.height / 2;
+                    if (isAfter) {
+                        nav.insertBefore(draggingEl, target.nextSibling);
+                    } else {
+                        nav.insertBefore(draggingEl, target);
+                    }
+                });
+
+                nav.addEventListener("drop", (event) => {
+                    if (!editMode) return;
+                    if (!draggingKey || sourceNav !== nav) return;
+                    event.preventDefault();
+                    const order = collectOrder(nav);
+                    saveOrder(order);
+                    applyOrderAll(order);
+                    applyIconColors();
+                    draggingKey = null;
+                    sourceNav = null;
+                });
+            });
+
+            applyEditMode();
+            applyIconColors();
+        })();
+    </script>
 </body>
 </html>

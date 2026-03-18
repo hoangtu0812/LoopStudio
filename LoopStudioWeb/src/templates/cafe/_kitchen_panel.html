@@ -1,0 +1,35 @@
+<div class="grid grid-cols-1 xl:grid-cols-4 gap-4">
+    {% set labels = {'pending': 'Chờ làm', 'cooking': 'Đang làm', 'done': 'Xong', 'served': 'Đã lên món'} %}
+    {% set badge = {'pending': 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300', 'cooking': 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300', 'done': 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300', 'served': 'bg-sky-100 text-sky-700 dark:bg-sky-900/30 dark:text-sky-300'} %}
+    {% for key in ['pending', 'cooking', 'done', 'served'] %}
+    <section class="bg-white/80 dark:bg-gray-800/80 rounded-2xl border border-gray-200/50 dark:border-gray-700/50 p-4">
+        <div class="flex items-center justify-between mb-3">
+            <h3 class="text-sm font-bold text-gray-900 dark:text-white">{{ labels[key] }}</h3>
+            <span class="text-xs px-2 py-0.5 rounded {{ badge[key] }}">{{ columns[key]|length }}</span>
+        </div>
+        <div class="space-y-2 max-h-[65vh] overflow-y-auto pr-1">
+            {% for item in columns[key] %}
+            <div class="rounded-xl border border-gray-200 dark:border-gray-700 p-3 bg-gray-50/60 dark:bg-gray-900/30">
+                <p class="text-sm font-semibold text-gray-900 dark:text-white">{{ item.item_name_snapshot }} x{{ item.qty }}</p>
+                <p class="text-xs text-gray-500 dark:text-gray-400">Bàn: {{ item.order.table_name }} · Đơn #{{ item.order.id }}</p>
+                {% if item.note %}<p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Ghi chú: {{ item.note }}</p>{% endif %}
+                <div class="mt-2 flex flex-wrap gap-1">
+                    {% for status in ['pending','cooking','done','served'] %}
+                    <form method="post" action="{{ url_for('cafe_kitchen.update_status', item_id=item.id) }}">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                        <input type="hidden" name="status" value="{{ status }}"/>
+                        <input type="hidden" name="next_url" value="{{ url_for('cafe_kitchen.panel') }}"/>
+                        <button type="submit" class="text-[11px] px-2 py-1 rounded {{ 'bg-brand-600 text-white' if item.kitchen_status == status else 'bg-gray-200 text-gray-700 dark:bg-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600' }}">
+                            {{ labels[status] }}
+                        </button>
+                    </form>
+                    {% endfor %}
+                </div>
+            </div>
+            {% else %}
+            <p class="text-xs text-gray-500 dark:text-gray-400 italic">Không có món.</p>
+            {% endfor %}
+        </div>
+    </section>
+    {% endfor %}
+</div>

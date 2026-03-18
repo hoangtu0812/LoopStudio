@@ -9,13 +9,54 @@
                 Cấu hình thông báo Telegram
             </h1>
             <p class="mt-2 text-sm text-gray-600 dark:text-slate-300">
-                Thiết lập channel/chat nhận thông báo trước buổi học và trước khi tới deadline công việc.
+                Thiết lập channel/chat nhận thông báo từ thời khóa biểu, công việc và calendar.
             </p>
         </div>
     </div>
 
+    <div class="bg-white dark:bg-slate-900 shadow-xl ring-1 ring-gray-200 dark:ring-white/10 sm:rounded-2xl p-6 mb-6">
+        <h2 class="text-lg font-semibold text-gray-900 dark:text-white">Danh bạ Chat ID</h2>
+        <p class="mt-1 text-xs text-gray-500 dark:text-slate-400">Ví dụ: `-1001234567890` - Nhóm A, Kênh thông báo...</p>
+        <form method="post" class="mt-4 grid grid-cols-1 sm:grid-cols-12 gap-3">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+            <input type="hidden" name="action" value="add_target"/>
+            <div class="sm:col-span-4">
+                <input type="text" name="target_label" required placeholder="Tên hiển thị (VD: Nhóm A)"
+                       class="block w-full rounded-md border-0 bg-gray-50 dark:bg-slate-800 text-gray-900 dark:text-white py-2 px-3 shadow-sm ring-1 ring-inset ring-gray-300 dark:ring-white/10 focus:ring-2 focus:ring-inset focus:ring-brand-500 sm:text-sm sm:leading-6">
+            </div>
+            <div class="sm:col-span-5">
+                <input type="text" name="target_chat_id" required placeholder="Chat ID (VD: -1001234567890)"
+                       class="block w-full rounded-md border-0 bg-gray-50 dark:bg-slate-800 text-gray-900 dark:text-white py-2 px-3 shadow-sm ring-1 ring-inset ring-gray-300 dark:ring-white/10 focus:ring-2 focus:ring-inset focus:ring-brand-500 sm:text-sm sm:leading-6">
+            </div>
+            <div class="sm:col-span-3">
+                <button type="submit" class="w-full rounded-md bg-brand-500 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-brand-400">
+                    Thêm Chat ID
+                </button>
+            </div>
+        </form>
+        {% if chat_targets %}
+        <div class="mt-4 grid grid-cols-1 gap-2">
+            {% for t in chat_targets %}
+            <div class="flex items-center justify-between rounded-lg border border-gray-200 dark:border-gray-700 px-3 py-2 bg-gray-50/60 dark:bg-slate-800/40">
+                <div>
+                    <p class="text-sm font-semibold text-gray-900 dark:text-white">{{ t.label }}</p>
+                    <p class="text-xs text-gray-500 dark:text-slate-400 font-mono">{{ t.chat_id }}</p>
+                </div>
+                <form method="post" action="{{ url_for('bot_admin.delete_chat_target', id=t.id) }}" onsubmit="return confirm('Xóa Chat ID {{ t.label }}?');">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                    <button type="submit" class="text-xs px-2.5 py-1.5 rounded bg-rose-600 text-white hover:bg-rose-500">Xóa</button>
+                </form>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <p class="mt-3 text-xs text-gray-500 dark:text-slate-400">Chưa có Chat ID nào trong danh bạ.</p>
+        {% endif %}
+    </div>
+
     <form method="post" class="space-y-6">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+        <input type="hidden" name="action" value="save_configs"/>
 
         {% for c in configs %}
         <div class="bg-white dark:bg-slate-900 shadow-xl ring-1 ring-gray-200 dark:ring-white/10 sm:rounded-2xl p-6 relative overflow-hidden">
@@ -37,6 +78,10 @@
                     Tổng hợp TODO hằng ngày (07:30)
                 {% elif c.config_type == 'todo_deadline_reminder' %}
                     Nhắc TODO theo deadline
+                {% elif c.config_type == 'calendar_event_notify' %}
+                    Báo khi tạo sự kiện Calendar
+                {% elif c.config_type == 'uptime_down_alert' %}
+                    Cảnh báo Uptime khi DOWN
                 {% else %}
                     {{ c.config_type }}
                 {% endif %}
@@ -45,7 +90,21 @@
             <div class="mt-6 grid grid-cols-1 gap-x-6 gap-y-6 sm:grid-cols-6 border-t border-gray-200 dark:border-white/5 pt-6">
                 <!-- Chat ID -->
                 <div class="col-span-1 sm:col-span-3">
-                    <label class="block text-sm font-medium leading-6 text-gray-700 dark:text-slate-300">Telegram Chat ID</label>
+                    <label class="block text-sm font-medium leading-6 text-gray-700 dark:text-slate-300">Chat ID từ danh bạ</label>
+                    <div class="mt-2">
+                        <select name="target_{{ c.id }}" class="block w-full rounded-md border-0 bg-gray-50 dark:bg-slate-800 text-gray-900 dark:text-white py-2 px-3 shadow-sm ring-1 ring-inset ring-gray-300 dark:ring-white/10 focus:ring-2 focus:ring-inset focus:ring-brand-500 sm:text-sm sm:leading-6">
+                            <option value="">-- Chọn từ danh bạ --</option>
+                            {% for t in chat_targets or [] %}
+                            <option value="{{ t.id }}" {{ 'selected' if c.chat_target_id == t.id else '' }}>
+                                {{ t.label }} ({{ t.chat_id }})
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+
+                <div class="col-span-1 sm:col-span-3">
+                    <label class="block text-sm font-medium leading-6 text-gray-700 dark:text-slate-300">Hoặc nhập tay Chat ID</label>
                     <div class="mt-2">
                         <input type="text" name="chat_{{ c.id }}" value="{{ c.chat_id }}" placeholder="-1001234567890" 
                                class="block w-full rounded-md border-0 bg-gray-50 dark:bg-slate-800 text-gray-900 dark:text-white py-2 px-3 shadow-sm ring-1 ring-inset ring-gray-300 dark:ring-white/10 focus:ring-2 focus:ring-inset focus:ring-brand-500 sm:text-sm sm:leading-6">
@@ -61,6 +120,8 @@
                     </div>
                     {% if c.config_type == 'todo_daily_digest' %}
                     <p class="mt-1 text-xs text-gray-500 dark:text-slate-500">Loại này gửi cố định lúc 07:30 mỗi sáng (timezone hệ thống).</p>
+                    {% elif c.config_type == 'uptime_down_alert' %}
+                    <p class="mt-1 text-xs text-gray-500 dark:text-slate-500">Loại này gửi ngay khi website chuyển trạng thái DOWN.</p>
                     {% endif %}
                 </div>
 
@@ -82,7 +143,7 @@
         {% endfor %}
 
         <div class="mt-6 flex items-center justify-end gap-x-4 border-t border-gray-200 dark:border-white/5 pt-6">
-            <a href="{{ url_for('schedule.index') }}" class="text-sm font-semibold leading-6 text-gray-600 dark:text-slate-300 hover:text-gray-900 dark:hover:text-white transition-colors">
+            <a href="{{ url_for('bot_admin.index') }}" class="text-sm font-semibold leading-6 text-gray-600 dark:text-slate-300 hover:text-gray-900 dark:hover:text-white transition-colors">
                 Trở lại
             </a>
             <button type="submit" class="rounded-md bg-brand-500 px-6 py-2 text-sm font-semibold text-white shadow-sm hover:bg-brand-400 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-500 transition-colors">

@@ -14,18 +14,33 @@
                 Tổng hợp ca học, công việc và meeting tại một nơi.
             </p>
         </div>
-        <div class="flex gap-2">
-            <a href="{{ url_for('calendar.index', d=(anchor.replace(day=1)).isoformat()) }}" class="inline-flex items-center px-3 py-2 text-xs font-semibold rounded-lg text-gray-700 bg-white border border-gray-200 hover:bg-gray-50 dark:text-gray-200 dark:bg-gray-800 dark:border-gray-700 dark:hover:bg-gray-700">
-                Đầu tháng
+        <div class="flex gap-2 flex-wrap">
+            <a href="{{ url_for('calendar.index', d=prev_anchor.isoformat(), view=view_mode) }}" class="inline-flex items-center px-3 py-2 text-xs font-semibold rounded-lg text-gray-700 bg-white border border-gray-200 hover:bg-gray-50 dark:text-gray-200 dark:bg-gray-800 dark:border-gray-700 dark:hover:bg-gray-700">
+                ← Trước
+            </a>
+            <a href="{{ url_for('calendar.index', d=today_iso, view=view_mode) }}" class="inline-flex items-center px-3 py-2 text-xs font-semibold rounded-lg text-gray-700 bg-white border border-gray-200 hover:bg-gray-50 dark:text-gray-200 dark:bg-gray-800 dark:border-gray-700 dark:hover:bg-gray-700">
+                Hôm nay
+            </a>
+            <a href="{{ url_for('calendar.index', d=next_anchor.isoformat(), view=view_mode) }}" class="inline-flex items-center px-3 py-2 text-xs font-semibold rounded-lg text-gray-700 bg-white border border-gray-200 hover:bg-gray-50 dark:text-gray-200 dark:bg-gray-800 dark:border-gray-700 dark:hover:bg-gray-700">
+                Sau →
+            </a>
+            <a href="{{ url_for('calendar.index', d=anchor.isoformat(), view='week') }}" class="inline-flex items-center px-3 py-2 text-xs font-semibold rounded-lg {{ 'text-white bg-brand-600' if view_mode == 'week' else 'text-gray-700 bg-white border border-gray-200 hover:bg-gray-50 dark:text-gray-200 dark:bg-gray-800 dark:border-gray-700 dark:hover:bg-gray-700' }}">
+                Tuần
+            </a>
+            <a href="{{ url_for('calendar.index', d=anchor.isoformat(), view='month') }}" class="inline-flex items-center px-3 py-2 text-xs font-semibold rounded-lg {{ 'text-white bg-brand-600' if view_mode == 'month' else 'text-gray-700 bg-white border border-gray-200 hover:bg-gray-50 dark:text-gray-200 dark:bg-gray-800 dark:border-gray-700 dark:hover:bg-gray-700' }}">
+                Tháng
+            </a>
+            <a href="{{ url_for('calendar.index', d=anchor.isoformat(), view='year') }}" class="inline-flex items-center px-3 py-2 text-xs font-semibold rounded-lg {{ 'text-white bg-brand-600' if view_mode == 'year' else 'text-gray-700 bg-white border border-gray-200 hover:bg-gray-50 dark:text-gray-200 dark:bg-gray-800 dark:border-gray-700 dark:hover:bg-gray-700' }}">
+                Năm
             </a>
         </div>
     </div>
 
     <div class="grid grid-cols-1 xl:grid-cols-3 gap-6">
-        <div class="xl:col-span-1">
+        <div class="xl:col-span-1 space-y-4">
             <div class="bg-white/80 dark:bg-gray-800/80 rounded-2xl border border-gray-200/50 dark:border-gray-700/50 p-6">
                 <h2 class="text-lg font-bold text-gray-900 dark:text-white">Tạo meeting / sự kiện</h2>
-                <form method="post" class="mt-4 space-y-3">
+                <form method="post" action="{{ url_for('calendar.index', d=anchor.isoformat(), view=view_mode) }}" class="mt-4 space-y-3">
                     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
                     <div>
                         <label class="block text-sm font-semibold text-gray-900 dark:text-gray-200 mb-1">Tiêu đề</label>
@@ -56,47 +71,147 @@
                     </button>
                 </form>
             </div>
+            {% if edit_event %}
+            <div class="bg-white/90 dark:bg-gray-800/90 rounded-2xl border border-brand-300/50 dark:border-brand-700/50 p-6">
+                <div class="flex items-center justify-between gap-2">
+                    <h2 class="text-lg font-bold text-gray-900 dark:text-white">Sửa / Xóa sự kiện</h2>
+                    <a href="{{ url_for('calendar.index', d=anchor.isoformat(), view=view_mode) }}" class="text-xs font-semibold text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200">
+                        Bỏ chọn
+                    </a>
+                </div>
+                <form method="post" action="{{ url_for('calendar.update_event', id=edit_event.id, d=anchor.isoformat(), view=view_mode) }}" class="mt-4 space-y-3">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-900 dark:text-gray-200 mb-1">Tiêu đề</label>
+                        <input name="title" required value="{{ edit_event.title }}" class="block w-full rounded-xl border-0 py-2.5 px-3 text-sm bg-white dark:bg-gray-900/50 text-gray-900 dark:text-white ring-1 ring-gray-300 dark:ring-gray-700 focus:ring-2 focus:ring-brand-500"/>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-900 dark:text-gray-200 mb-1">Loại sự kiện</label>
+                        <select name="event_type" class="block w-full rounded-xl border-0 py-2.5 px-3 text-sm bg-white dark:bg-gray-900/50 text-gray-900 dark:text-white ring-1 ring-gray-300 dark:ring-gray-700 focus:ring-2 focus:ring-brand-500">
+                            <option value="meeting" {{ 'selected' if edit_event.event_type == 'meeting' else '' }}>Meeting</option>
+                            <option value="personal" {{ 'selected' if edit_event.event_type == 'personal' else '' }}>Cá nhân</option>
+                            <option value="reminder" {{ 'selected' if edit_event.event_type == 'reminder' else '' }}>Nhắc việc</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-900 dark:text-gray-200 mb-1">Bắt đầu</label>
+                        <input type="datetime-local" name="start_at" required value="{{ edit_event.start_at.strftime('%Y-%m-%dT%H:%M') }}" class="block w-full rounded-xl border-0 py-2.5 px-3 text-sm bg-white dark:bg-gray-900/50 text-gray-900 dark:text-white ring-1 ring-gray-300 dark:ring-gray-700 focus:ring-2 focus:ring-brand-500"/>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-900 dark:text-gray-200 mb-1">Kết thúc</label>
+                        <input type="datetime-local" name="end_at" required value="{{ edit_event.end_at.strftime('%Y-%m-%dT%H:%M') }}" class="block w-full rounded-xl border-0 py-2.5 px-3 text-sm bg-white dark:bg-gray-900/50 text-gray-900 dark:text-white ring-1 ring-gray-300 dark:ring-gray-700 focus:ring-2 focus:ring-brand-500"/>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-900 dark:text-gray-200 mb-1">Mô tả</label>
+                        <textarea name="description" rows="3" class="block w-full rounded-xl border-0 py-2.5 px-3 text-sm bg-white dark:bg-gray-900/50 text-gray-900 dark:text-white ring-1 ring-gray-300 dark:ring-gray-700 focus:ring-2 focus:ring-brand-500">{{ edit_event.description or '' }}</textarea>
+                    </div>
+                    <button type="submit" class="w-full inline-flex items-center justify-center rounded-xl bg-brand-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-brand-500">
+                        Lưu thay đổi
+                    </button>
+                </form>
+                <form method="post" action="{{ url_for('calendar.delete_event', id=edit_event.id, d=anchor.isoformat(), view=view_mode) }}" class="mt-2" onsubmit="return confirm('Bạn có chắc muốn xóa sự kiện này?');">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                    <button type="submit" class="w-full inline-flex items-center justify-center rounded-xl bg-rose-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-rose-500">
+                        Xóa sự kiện
+                    </button>
+                </form>
+            </div>
+            {% endif %}
         </div>
 
         <div class="xl:col-span-2 space-y-6">
+            {% if view_mode == 'week' %}
             <div class="bg-white/80 dark:bg-gray-800/80 rounded-2xl border border-gray-200/50 dark:border-gray-700/50 overflow-hidden">
                 <div class="grid grid-cols-7 bg-gray-50/60 dark:bg-gray-900/40 border-b border-gray-100 dark:border-gray-700/50">
-                    {% for d in week_days %}
+                    {% for c in week_day_columns %}
                     <div class="px-3 py-2 text-center border-r border-gray-100 dark:border-gray-700/40 last:border-r-0">
-                        <p class="text-[11px] font-semibold text-gray-500 dark:text-gray-400 uppercase">{{ d.strftime('%a') }}</p>
-                        <p class="text-sm font-bold text-gray-900 dark:text-white">{{ d.strftime('%d/%m') }}</p>
+                        <p class="text-[11px] font-semibold text-gray-500 dark:text-gray-400 uppercase">{{ c.date.strftime('%a') }}</p>
+                        <p class="text-sm font-bold text-gray-900 dark:text-white">{{ c.date.strftime('%d/%m') }}</p>
                     </div>
                     {% endfor %}
                 </div>
-                <div class="grid grid-cols-7 min-h-[380px]">
-                    {% for d in week_days %}
-                    {% set key = d.isoformat() %}
-                    <div class="border-r border-gray-100 dark:border-gray-700/40 last:border-r-0 p-2 space-y-2">
-                        {% for e in events_by_day[key] %}
-                        <a href="{{ e.source_url or '#' }}" class="block rounded-lg p-2 text-xs
-                            {% if e.event_type == 'class' %}bg-blue-100 text-blue-800 dark:bg-blue-900/40 dark:text-blue-300
-                            {% elif e.event_type == 'todo' %}bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300
-                            {% else %}bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300
-                            {% endif %}">
-                            <p class="font-semibold truncate">{{ e.title }}</p>
-                            <p class="opacity-80">{{ e.start_at.strftime('%H:%M') }} - {{ e.end_at.strftime('%H:%M') }}</p>
+                <div class="grid grid-cols-7 min-h-[620px]">
+                    {% for c in week_day_columns %}
+                    <div class="border-r border-gray-100 dark:border-gray-700/40 last:border-r-0 relative"
+                         style="background-image: repeating-linear-gradient(to bottom, rgba(148,163,184,0.15) 0, rgba(148,163,184,0.15) 1px, transparent 1px, transparent calc(100% / {{ day_end_hour - day_start_hour }}));">
+                        {% for e in c.events %}
+                        <a href="{{ url_for('calendar.index', d=anchor.isoformat(), view=view_mode, edit=e.event_id) if e.event_id else (e.source_url or '#') }}"
+                           title="{{ e.title }}{% if e.description %} - {{ e.description }}{% endif %}"
+                           class="absolute rounded-lg px-1.5 py-1 text-[11px] text-white shadow-sm border {{ e.chip_class }} hover:ring-2 hover:ring-white/60 transition overflow-hidden"
+                           style="top: {{ e.top_pct }}%; height: {{ e.height_pct }}%; left: calc({{ e.lane_left_pct }}% + 2px); width: calc({{ e.lane_width_pct }}% - 4px);">
+                            <p class="font-semibold leading-tight truncate">{{ e.title }}</p>
+                            {% if e.height_pct >= 8 and e.lane_width_pct >= 30 %}
+                            <p class="opacity-95 text-[11px]">{{ e.start_at.strftime('%H:%M') }} - {{ e.end_at.strftime('%H:%M') }}</p>
+                            {% endif %}
                         </a>
-                        {% else %}
-                        <p class="text-[11px] text-gray-400 italic">Không có sự kiện</p>
                         {% endfor %}
                     </div>
                     {% endfor %}
                 </div>
             </div>
+            {% elif view_mode == 'month' %}
+            <div class="bg-white/80 dark:bg-gray-800/80 rounded-2xl border border-gray-200/50 dark:border-gray-700/50 overflow-hidden">
+                <div class="grid grid-cols-7 bg-gray-50/60 dark:bg-gray-900/40 border-b border-gray-100 dark:border-gray-700/50">
+                    {% for day_name in ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'] %}
+                    <div class="px-2 py-2 text-center text-xs font-semibold text-gray-500 dark:text-gray-400 border-r border-gray-100 dark:border-gray-700/40 last:border-r-0">
+                        {{ day_name }}
+                    </div>
+                    {% endfor %}
+                </div>
+                <div class="grid grid-cols-7 min-h-[560px]">
+                    {% for cell in month_cells %}
+                    <div class="border-r border-b border-gray-100 dark:border-gray-700/40 p-2 align-top">
+                        <p class="text-xs font-bold {{ 'text-gray-900 dark:text-white' if cell.in_month else 'text-gray-400 dark:text-gray-500' }}">
+                            {{ cell.date.strftime('%d') }}
+                        </p>
+                        <div class="mt-1 space-y-1">
+                            {% for e in cell.events %}
+                            <a href="{{ url_for('calendar.index', d=anchor.isoformat(), view=view_mode, edit=e.event_id) if e.event_id else (e.source_url or '#') }}" class="block rounded px-1.5 py-1 text-[11px]
+                                {% if e.event_type == 'class' %}bg-blue-100 text-blue-800 dark:bg-blue-900/40 dark:text-blue-300
+                                {% elif e.event_type == 'todo' %}bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300
+                                {% else %}bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300
+                                {% endif %}">
+                                <span class="font-semibold truncate block">{{ e.title }}</span>
+                            </a>
+                            {% endfor %}
+                            {% if cell.more_count > 0 %}
+                            <p class="text-[11px] text-gray-400">+{{ cell.more_count }} sự kiện</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% else %}
+            <div class="bg-white/80 dark:bg-gray-800/80 rounded-2xl border border-gray-200/50 dark:border-gray-700/50 overflow-hidden p-4">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    {% for m in year_months %}
+                    <div class="rounded-xl border border-gray-200 dark:border-gray-700 p-4 bg-white/60 dark:bg-gray-900/30">
+                        <h3 class="text-sm font-bold text-gray-900 dark:text-white">{{ m.month }}</h3>
+                        <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">{{ m.event_count }} sự kiện</p>
+                        <div class="mt-2 flex flex-wrap gap-1">
+                            {% for k, v in m.type_counts.items() %}
+                            <span class="text-[11px] px-2 py-0.5 rounded bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300">{{ k }}: {{ v }}</span>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
 
             <div class="bg-white/80 dark:bg-gray-800/80 rounded-2xl border border-gray-200/50 dark:border-gray-700/50 p-5">
                 <h2 class="text-lg font-bold text-gray-900 dark:text-white">Sự kiện hôm nay</h2>
                 <div class="mt-3 space-y-2">
                     {% for e in today_events %}
-                    <div class="rounded-lg px-3 py-2 text-sm bg-gray-50 dark:bg-gray-900/40 border border-gray-200 dark:border-gray-700">
+                    <a href="{{ url_for('calendar.index', d=anchor.isoformat(), view=view_mode, edit=e.event_id) if e.event_id else (e.source_url or '#') }}"
+                       class="block rounded-lg px-3 py-2 text-sm bg-gray-50 dark:bg-gray-900/40 border border-gray-200 dark:border-gray-700 hover:border-brand-400/60 dark:hover:border-brand-500/60 transition">
                         <p class="font-semibold text-gray-900 dark:text-white">{{ e.title }}</p>
                         <p class="text-xs text-gray-500 dark:text-gray-400">{{ e.start_at.strftime('%H:%M') }} - {{ e.end_at.strftime('%H:%M') }} · {{ e.event_type }}</p>
-                    </div>
+                        {% if e.description %}
+                        <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5 line-clamp-1">{{ e.description }}</p>
+                        {% endif %}
+                    </a>
                     {% else %}
                     <p class="text-sm text-gray-500 dark:text-gray-400 italic">Hôm nay chưa có sự kiện nào.</p>
                     {% endfor %}

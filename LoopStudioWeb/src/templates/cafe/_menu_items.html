@@ -1,0 +1,36 @@
+<div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+    {% for m in menu_items %}
+    <div class="rounded-xl border border-gray-200 dark:border-gray-700 p-3 bg-gray-50/60 dark:bg-gray-900/30">
+        <div class="flex items-start gap-3">
+            {% if m.image_url %}
+            <img src="{{ m.image_url }}" alt="{{ m.name }}" class="w-14 h-14 rounded-lg object-cover border border-gray-200 dark:border-gray-700"/>
+            {% else %}
+            <div class="w-14 h-14 rounded-lg bg-gray-200 dark:bg-gray-700 flex items-center justify-center text-xs text-gray-500">No img</div>
+            {% endif %}
+            <div class="min-w-0 flex-1">
+                <p class="text-sm font-semibold text-gray-900 dark:text-white truncate">{{ m.name }}</p>
+                <p class="text-xs text-gray-500 dark:text-gray-400">{{ m.category or 'Không phân loại' }}</p>
+                <p class="text-sm font-bold text-emerald-600 dark:text-emerald-400 mt-1">{{ '{:,.0f}'.format(m.price or 0) }} đ</p>
+            </div>
+        </div>
+        {% if selected_order %}
+        <form method="post"
+              action="{{ url_for('cafe_order.add_item', order_id=selected_order.id) }}"
+              hx-post="{{ url_for('cafe_order.add_item', order_id=selected_order.id) }}"
+              hx-target="#order-current-container"
+              hx-swap="outerHTML"
+              class="mt-3 flex items-center gap-2">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+            <input type="hidden" name="menu_item_id" value="{{ m.id }}"/>
+            <input type="number" name="qty" min="1" value="1" class="w-16 rounded-lg border-0 py-1.5 px-2 bg-white dark:bg-gray-900/50 text-sm ring-1 ring-gray-300 dark:ring-gray-700 focus:ring-2 focus:ring-brand-500"/>
+            <input name="note" placeholder="Ghi chú..." class="min-w-0 flex-1 rounded-lg border-0 py-1.5 px-2 bg-white dark:bg-gray-900/50 text-sm ring-1 ring-gray-300 dark:ring-gray-700 focus:ring-2 focus:ring-brand-500"/>
+            <button type="submit" class="px-3 py-1.5 rounded-lg text-xs font-semibold text-white bg-brand-600 hover:bg-brand-500">Add</button>
+        </form>
+        {% else %}
+        <p class="mt-3 text-xs text-gray-500 dark:text-gray-400 italic">Mở hoặc chọn bàn để thêm món.</p>
+        {% endif %}
+    </div>
+    {% else %}
+    <p class="text-sm text-gray-500 dark:text-gray-400 italic">Không có món phù hợp.</p>
+    {% endfor %}
+</div>

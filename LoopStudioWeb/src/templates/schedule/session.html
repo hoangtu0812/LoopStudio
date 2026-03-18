@@ -196,7 +196,7 @@
                 <div class="mt-4 flex flex-wrap gap-2">
                     {% for cfg in telegram_targets %}
                     <span class="inline-flex items-center rounded-lg px-2 py-1 text-xs font-medium bg-brand-50 text-brand-700 dark:bg-brand-900/40 dark:text-brand-300 border border-brand-100 dark:border-brand-800/50">
-                        {{ cfg.config_type }}: {{ cfg.chat_id }}
+                        {{ cfg.label or cfg.config_type }}: {{ cfg.chat_id }}
                     </span>
                     {% endfor %}
                 </div>

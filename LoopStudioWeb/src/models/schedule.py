@@ -68,6 +68,19 @@ class NotificationConfig(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     config_type = db.Column(db.String(50), nullable=False)  # "schedule_reminder" | "task_reminder"
     chat_id = db.Column(db.String(50), nullable=False)  # Channel/chat nhận tin
+    chat_target_id = db.Column(db.Integer, nullable=True)  # Tham chiếu danh bạ chat Telegram (tuỳ chọn)
     minutes_before = db.Column(db.Integer, nullable=False)  # 15 = 15 phút trước
     enabled = db.Column(db.Boolean, default=True)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+
+class TelegramChatTarget(db.Model):
+    """Danh bạ chat Telegram để tái sử dụng trong cấu hình thông báo."""
+
+    __tablename__ = "telegram_chat_targets"
+
+    id = db.Column(db.Integer, primary_key=True)
+    label = db.Column(db.String(120), nullable=False, unique=True)  # Ví dụ: "Nhóm A"
+    chat_id = db.Column(db.String(50), nullable=False, unique=True)
+    is_active = db.Column(db.Boolean, nullable=False, default=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)

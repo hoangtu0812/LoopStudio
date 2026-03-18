@@ -3,9 +3,10 @@ from datetime import datetime, date, time, timedelta
 
 from flask import Blueprint, render_template, request, flash, redirect, url_for
 from flask_login import login_required
+from sqlalchemy import func
 
 from ..app import db
-from ..models import Schedule, ScheduleSession, CheckIn, Task, NotificationConfig
+from ..models import Schedule, ScheduleSession, CheckIn, Task, NotificationConfig, TelegramChatTarget
 
 schedule_bp = Blueprint("schedule", __name__)
 
@@ -35,6 +36,70 @@ def _generate_sessions(schedule: Schedule) -> list[ScheduleSession]:
 def index():
     schedules = Schedule.query.order_by(Schedule.start_date).all()
     return render_template("schedule/index.html", schedules=schedules, day_names=DAY_NAMES)
+
+
+@schedule_bp.route("/dashboard")
+@login_required
+def dashboard():
+    sessions = ScheduleSession.query.order_by(ScheduleSession.session_date.asc()).all()
+    week_stats: dict[str, dict[str, int]] = {}
+    subject_stats: dict[str, dict[str, int]] = {}
+    for session in sessions:
+        year, week, _ = session.session_date.isocalendar()
+        week_key = f"{year}-W{week:02d}"
+        if week_key not in week_stats:
+            week_stats[week_key] = {"total": 0, "checked": 0}
+        week_stats[week_key]["total"] += 1
+        week_stats[week_key]["checked"] += 1 if session.check_ins else 0
+
+        subject_name = session.schedule.name
+        if subject_name not in subject_stats:
+            subject_stats[subject_name] = {"total": 0, "checked": 0}
+        subject_stats[subject_name]["total"] += 1
+        subject_stats[subject_name]["checked"] += 1 if session.check_ins else 0
+
+    week_labels = sorted(week_stats.keys())[-12:]
+    week_rates = []
+    for wk in week_labels:
+        total = week_stats[wk]["total"]
+        checked = week_stats[wk]["checked"]
+        week_rates.append(round((checked / total) * 100, 1) if total else 0)
+
+    subject_items = []
+    for subject, values in subject_stats.items():
+        total = values["total"]
+        checked = values["checked"]
+        subject_items.append((subject, round((checked / total) * 100, 1) if total else 0))
+    subject_items.sort(key=lambda x: x[1], reverse=True)
+    subject_labels = [x[0] for x in subject_items[:10]]
+    subject_rates = [x[1] for x in subject_items[:10]]
+
+    total_all = sum(v["total"] for v in week_stats.values())
+    checked_all = sum(v["checked"] for v in week_stats.values())
+    overall_rate = round((checked_all / total_all) * 100, 1) if total_all else 0
+    upcoming_sessions = ScheduleSession.query.filter(
+        ScheduleSession.session_date >= date.today()
+    ).count()
+    checked_today = (
+        db.session.query(func.count(CheckIn.id))
+        .join(ScheduleSession, CheckIn.session_id == ScheduleSession.id)
+        .filter(ScheduleSession.session_date == date.today())
+        .scalar()
+        or 0
+    )
+
+    return render_template(
+        "schedule/dashboard.html",
+        week_labels=week_labels,
+        week_rates=week_rates,
+        subject_labels=subject_labels,
+        subject_rates=subject_rates,
+        overall_rate=overall_rate,
+        total_sessions=total_all,
+        checked_sessions=checked_all,
+        upcoming_sessions=upcoming_sessions,
+        checked_today=checked_today,
+    )
 
 
 @schedule_bp.route("/create", methods=["GET", "POST"])
@@ -110,10 +175,23 @@ def schedule_sessions(id):
 @login_required
 def session_detail(id):
     session = ScheduleSession.query.get_or_404(id)
-    telegram_targets = NotificationConfig.query.filter(
+    configs = NotificationConfig.query.filter(
         NotificationConfig.enabled == True,  # noqa: E712
-        NotificationConfig.chat_id != "",
     ).all()
+    target_map = {
+        t.id: t
+        for t in TelegramChatTarget.query.filter(
+            TelegramChatTarget.is_active == True  # noqa: E712
+        ).all()
+    }
+    telegram_targets = []
+    for cfg in configs:
+        resolved_chat_id = (target_map.get(cfg.chat_target_id).chat_id if cfg.chat_target_id in target_map else cfg.chat_id) or ""
+        resolved_chat_id = resolved_chat_id.strip()
+        if not resolved_chat_id:
+            continue
+        label = target_map.get(cfg.chat_target_id).label if cfg.chat_target_id in target_map else cfg.config_type
+        telegram_targets.append({"chat_id": resolved_chat_id, "label": label, "config_type": cfg.config_type})
     return render_template(
         "schedule/session.html",
         session=session,
@@ -174,9 +252,20 @@ def notify_session(id):
 
     configs = NotificationConfig.query.filter(
         NotificationConfig.enabled == True,  # noqa: E712
-        NotificationConfig.chat_id != "",
     ).all()
-    chat_ids = sorted({c.chat_id.strip() for c in configs if c.chat_id and c.chat_id.strip()})
+    target_map = {
+        t.id: t.chat_id
+        for t in TelegramChatTarget.query.filter(
+            TelegramChatTarget.is_active == True  # noqa: E712
+        ).all()
+    }
+    chat_ids = sorted(
+        {
+            (target_map.get(c.chat_target_id) or c.chat_id or "").strip()
+            for c in configs
+            if (target_map.get(c.chat_target_id) or c.chat_id or "").strip()
+        }
+    )
     if not chat_ids:
         flash("Chưa có chat Telegram nào được bật trong cấu hình thông báo.", "warning")
         return redirect(url_for("schedule.session_detail", id=id))
@@ -204,42 +293,5 @@ def notify_session(id):
 @schedule_bp.route("/notifications", methods=["GET", "POST"])
 @login_required
 def notifications():
-    configs = NotificationConfig.query.all()
-    if request.method == "POST":
-        for cfg in configs:
-            cfg.chat_id = request.form.get(f"chat_{cfg.id}") or cfg.chat_id
-            cfg.minutes_before = int(request.form.get(f"min_{cfg.id}", 15))
-            cfg.enabled = request.form.get(f"enabled_{cfg.id}") == "on"
-        new_type = request.form.get("new_type")
-        if new_type:
-            nc = NotificationConfig(
-                config_type=new_type,
-                chat_id=request.form.get("new_chat_id", ""),
-                minutes_before=int(request.form.get("new_minutes", 15)),
-            )
-            db.session.add(nc)
-        db.session.commit()
-        flash("Đã lưu cấu hình.", "success")
-        return redirect(url_for("schedule.notifications"))
-    required_defaults = {
-        "schedule_reminder": 15,
-        "task_reminder": 60,
-        "todo_daily_digest": 0,
-        "todo_deadline_reminder": 30,
-    }
-    existing_types = {c.config_type for c in configs}
-    created = False
-    for config_type, minutes in required_defaults.items():
-        if config_type not in existing_types:
-            db.session.add(
-                NotificationConfig(
-                    config_type=config_type,
-                    chat_id="",
-                    minutes_before=minutes,
-                )
-            )
-            created = True
-    if created:
-        db.session.commit()
-        configs = NotificationConfig.query.all()
-    return render_template("schedule/notifications.html", configs=configs)
+    flash("Cấu hình Telegram đã chuyển sang Bot Admin.", "info")
+    return redirect(url_for("bot_admin.notifications"))
